@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+
+  <!-- Package Configuration -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Package Metadata -->
+  <PropertyGroup>
+    <PackageId>SimpleChessEngine</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>James Hughes</Authors>
+    <Company>James Hughes</Company>
+    <Description>A simple chess engine library for C#</Description>
+    <Copyright>Copyright (c) 2025 James Hughes</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/hughesjs/SimpleChessEngine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hughesjs/SimpleChessEngine</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>chess;engine;game;board;csharp</PackageTags>
+  </PropertyGroup>
+
+  <!-- Package Contents -->
+  <ItemGroup>
+    <!-- Include README in package -->
+    <None Include="../../README.md" CopyToOutputDirectory="Always" Condition="Exists('../../README.md')" />
+    <None Include="$(OutputPath)README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <!-- InternalsVisibleTo for Testing -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="SimpleChessEngine.Tests"/>
+  </ItemGroup>
+
+</Project>

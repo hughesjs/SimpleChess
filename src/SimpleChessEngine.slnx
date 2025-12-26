@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="SimpleChessEngine/SimpleChessEngine.csproj" />
+    <Project Path="SimpleChessEngine.Tests/SimpleChessEngine.Tests.csproj" />
+  </Folder>
+</Solution>
