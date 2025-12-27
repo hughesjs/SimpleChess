@@ -8,9 +8,9 @@ namespace SimpleChess.State;
 
 
 /// <summary>
-/// A fully validated FEN string representing a board state.
+/// A fully validated FEN string representing a game state.
 /// <example>
-/// The FEN string representing a new gameState is:
+/// The FEN string representing a new game is:
 /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 /// </example>
 /// </summary>
@@ -24,7 +24,7 @@ public ref partial struct FenGameState
     internal FenSegment<FullTurnCounterKind> FullTurnCounter;
 
     /// <summary>
-    /// Represents the board at the start of a gameState.
+    /// Represents the game state at the start of a new game.
     /// <code>
     /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     /// </code>
@@ -55,7 +55,29 @@ public ref partial struct FenGameState
         FullTurnCounter = new(fenSpan[(space5 + 1)..]);
     }
 
+    /// <summary>
+    /// Returns the FEN string representation of this game state.
+    /// </summary>
+    /// <returns>The validated FEN string.</returns>
     public override string ToString() => _fen;
+
+    /// <summary>
+    /// Attempts to parse and validate a FEN (Forsyth-Edwards Notation) string.
+    /// </summary>
+    /// <param name="rawFen">The FEN string to parse.</param>
+    /// <param name="fen">When this method returns, contains the parsed and validated FEN game state if successful; otherwise, the default value.</param>
+    /// <returns><c>true</c> if the FEN string was successfully parsed and validated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method validates all six components of a FEN string:
+    /// <list type="number">
+    /// <item><description>Piece placement: Must have 8 ranks separated by slashes, each rank totalling 8 files</description></item>
+    /// <item><description>Active colour: Must be 'w' (White) or 'b' (Black)</description></item>
+    /// <item><description>Castling rights: Must be valid combination of K, Q, k, q, or '-' for none</description></item>
+    /// <item><description>En passant target: Must be '-' or a valid square in algebraic notation (e.g., 'e3')</description></item>
+    /// <item><description>Halfmove clock: Must be a non-negative integer (0-150)</description></item>
+    /// <item><description>Fullmove number: Must be a positive integer (1-8840)</description></item>
+    /// </list>
+    /// </remarks>
     public static bool TryParse(string rawFen, out FenGameState fen)
     {
         fen = default;
@@ -139,7 +161,7 @@ public ref partial struct FenGameState
         /// <summary>
         /// DO NOT USE THIS OUTSIDE OF FenGameState (or test code)
         /// Unfortunately, there's no access modifier that lets me define a ctor only accessible from the containing type and nowhere else
-        /// If you use this anywhere else, all validation garauntees go out of the window.
+        /// If you use this anywhere else, all validation guarantees go out of the window.
         /// </summary>
         /// <param name="value"></param>
         internal FenSegment(ReadOnlySpan<char> value) => _value = value;

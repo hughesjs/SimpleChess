@@ -4,7 +4,7 @@ namespace SimpleChess.State;
 
 /// <summary>
 /// Represents the halfmove clock used for the fifty-move rule.
-/// Valid range: 0 to 150 (gameState is automatically drawn at 75 moves/150 half-moves under FIDE Laws of Chess 2014+).
+/// Valid range: 0 to 150.
 /// </summary>
 public readonly record struct HalfTurnCount
 {
@@ -37,8 +37,19 @@ public readonly record struct HalfTurnCount
         return true;
     }
 
+    /// <summary>
+    /// Implicitly converts a <see cref="HalfTurnCount"/> to an integer.
+    /// </summary>
+    /// <param name="count">The halfmove count to convert.</param>
+    /// <returns>The integer value of the halfmove counter.</returns>
     public static implicit operator int(HalfTurnCount count) => count._value;
 
+    /// <summary>
+    /// Explicitly converts an integer to a <see cref="HalfTurnCount"/>.
+    /// </summary>
+    /// <param name="clock">The integer value to convert (must be between 0 and 150).</param>
+    /// <returns>A halfmove count with the specified value.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the value is outside the valid range (0-150).</exception>
     public static explicit operator HalfTurnCount(int clock)
     {
         return TryCreate(clock, out HalfTurnCount result) ? result : throw new InvalidCastException("Value provided is not valid");

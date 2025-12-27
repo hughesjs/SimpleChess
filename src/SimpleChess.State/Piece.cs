@@ -2,6 +2,15 @@ using System;
 
 namespace SimpleChess.State;
 
+/// <summary>
+/// Represents a chess piece with its colour and type.
+/// </summary>
+/// <param name="Colour">The colour of the piece (White, Black, or None for empty squares).</param>
+/// <param name="PieceType">The type of the piece (King, Queen, Rook, Bishop, Knight, Pawn, or None for empty squares).</param>
+/// <remarks>
+/// A default-constructed piece (with Colour.None and PieceType.None) represents an empty square on the board.
+/// This is the standard way to represent vacant positions.
+/// </remarks>
 public record struct Piece(Colour Colour, PieceType PieceType)
 {
     internal static Piece FromFenCode(char code)

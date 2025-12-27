@@ -3,11 +3,38 @@ using System.Text;
 
 namespace SimpleChess.State;
 
+/// <summary>
+/// Represents the castling rights available to both players in a chess game.
+/// </summary>
+/// <remarks>
+/// Castling is a special move involving the king and a rook. A player may castle kingside (with the h-file rook)
+/// or queenside (with the a-file rook), provided certain conditions are met. This type tracks which castling
+/// moves are still legally available for each player.
+/// <para>
+/// Castling rights are lost when: the king moves, the relevant rook moves, or the rook is captured.
+/// When all four properties are false, no castling is available for either player.
+/// </para>
+/// </remarks>
 public readonly record struct CastlingRights
 {
+    /// <summary>
+    /// Gets whether White can castle kingside (with the rook on h1).
+    /// </summary>
     public bool WhiteKingside => _flags.HasFlag(CastlingRightsFlags.WhiteKingside);
+
+    /// <summary>
+    /// Gets whether White can castle queenside (with the rook on a1).
+    /// </summary>
     public bool WhiteQueenside => _flags.HasFlag(CastlingRightsFlags.WhiteQueenside);
+
+    /// <summary>
+    /// Gets whether Black can castle kingside (with the rook on h8).
+    /// </summary>
     public bool BlackKingside => _flags.HasFlag(CastlingRightsFlags.BlackKingside);
+
+    /// <summary>
+    /// Gets whether Black can castle queenside (with the rook on a8).
+    /// </summary>
     public bool BlackQueenside => _flags.HasFlag(CastlingRightsFlags.BlackQueenside);
 
     private readonly CastlingRightsFlags _flags;

@@ -4,6 +4,17 @@ using System.Text;
 
 namespace SimpleChess.State;
 
+/// <summary>
+/// Represents the 64-square chess board with piece positions.
+/// </summary>
+/// <remarks>
+/// The board uses an efficient inline array for piece storage, providing optimal performance
+/// for piece lookups and modifications. The coordinate system uses <see cref="Rank"/> for rows (1-8)
+/// and <see cref="File"/> for columns (A-H), with Rank.One being White's back row.
+/// <para>
+/// Empty squares are represented by default <see cref="Piece"/> values (with Colour.None and PieceType.None).
+/// </para>
+/// </remarks>
 public readonly struct Board : IEquatable<Board> // Note: Not a record struct because the standard IEquatable<T> implementation doesn't work with InlineArray
 {
     private readonly PieceBuffer _pieces;
@@ -14,15 +25,27 @@ public readonly struct Board : IEquatable<Board> // Note: Not a record struct be
     }
 
     /// <summary>
-    /// Gets a piece using its file and rank.
+    /// Gets a piece at the specified rank and file coordinates.
     /// </summary>
-    /// <param name="rank">Y axis (row) with White's back row at One</param>
-    /// <param name="file">X axis (column) with the leftmost file at A</param>
-    /// <returns></returns>
+    /// <param name="rank">The rank (row), where Rank.One is White's back row and Rank.Eight is Black's back row.</param>
+    /// <param name="file">The file (column), where File.A is the leftmost column and File.H is the rightmost.</param>
+    /// <returns>The piece at the specified position, or a default piece (Colour.None, PieceType.None) if the square is empty.</returns>
     public Piece GetPieceAt(Rank rank, File file) => _pieces[((int)rank * 8) + (int)file];
 
+    /// <summary>
+    /// Gets a piece at the specified square.
+    /// </summary>
+    /// <param name="square">The square coordinates.</param>
+    /// <returns>The piece at the specified position, or a default piece (Colour.None, PieceType.None) if the square is empty.</returns>
     public Piece GetPieceAt(Square square) => GetPieceAt(square.Rank, square.File);
 
+    /// <summary>
+    /// Gets a board in the standard starting position for a new chess game.
+    /// </summary>
+    /// <remarks>
+    /// This represents the traditional setup with pawns on ranks 2 and 7,
+    /// and major/minor pieces on ranks 1 and 8 in their standard positions.
+    /// </remarks>
     public static Board DefaultBoard => FromFen(FenGameState.DefaultGame.PieceLayout);
 
     internal static Board FromFen(FenGameState.FenSegment<FenGameState.PieceLayoutKind> piecesFenSection)

@@ -3,9 +3,30 @@ using System.Text;
 
 namespace SimpleChess.State;
 
+/// <summary>
+/// Represents a coordinate on the chess board using file (column) and rank (row).
+/// </summary>
+/// <remarks>
+/// Squares are identified using algebraic notation, where files are labelled A-H (left to right from White's perspective)
+/// and ranks are labelled 1-8 (White's back row to Black's back row). For example, "e4" represents the square
+/// at file E, rank 4.
+/// </remarks>
 public readonly struct Square
 {
+    /// <summary>
+    /// Gets the file (column) of this square.
+    /// </summary>
+    /// <remarks>
+    /// Files range from A (leftmost) to H (rightmost) from White's perspective.
+    /// </remarks>
     public File File { get; }
+
+    /// <summary>
+    /// Gets the rank (row) of this square.
+    /// </summary>
+    /// <remarks>
+    /// Ranks range from 1 (White's back row) to 8 (Black's back row).
+    /// </remarks>
     public Rank Rank { get; }
 
     private Square(File file, Rank rank)

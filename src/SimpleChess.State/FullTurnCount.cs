@@ -3,9 +3,9 @@ using System;
 namespace SimpleChess.State;
 
 /// <summary>
-/// Represents the full move number in a chess gameState.
-/// Valid range: 1 to 8840 (maximum full moves in a legal chess gameState under FIDE Laws of Chess 2014+).
-/// See: https://wismuth.com/chess/longest-gameState.html
+/// Represents the full move number in a chess game.
+/// Valid range: 1 to 8840 (maximum full moves in a legal chess game under FIDE Laws of Chess 2014+).
+/// See: https://wismuth.com/chess/longest-game.html
 /// </summary>
 public readonly record struct FullTurnCount
 {
@@ -21,7 +21,7 @@ public readonly record struct FullTurnCount
     {
         if (!int.TryParse(fullTurnCountFen, out int count) || !TryCreate(count, out FullTurnCount result))
         {
-            throw new InvalidOperationException("Value provided is not valid for a half turn counter. If you get here there's an error in the FenGameState validation logic.");
+            throw new InvalidOperationException("Value provided is not valid for a full turn counter. If you get here there's an error in the FenGameState validation logic.");
         }
 
         return result;
@@ -39,8 +39,19 @@ public readonly record struct FullTurnCount
         return true;
     }
 
+    /// <summary>
+    /// Implicitly converts a <see cref="FullTurnCount"/> to an integer.
+    /// </summary>
+    /// <param name="count">The fullmove count to convert.</param>
+    /// <returns>The integer value of the fullmove number.</returns>
     public static implicit operator int(FullTurnCount count) => count._value;
 
+    /// <summary>
+    /// Explicitly converts an integer to a <see cref="FullTurnCount"/>.
+    /// </summary>
+    /// <param name="clock">The integer value to convert (must be between 1 and 8840).</param>
+    /// <returns>A fullmove count with the specified value.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the value is outside the valid range (1-8840).</exception>
     public static explicit operator FullTurnCount(int clock)
     {
         return TryCreate(clock, out FullTurnCount result) ? result : throw new InvalidCastException("Value provided is not valid");
