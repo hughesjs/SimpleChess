@@ -132,6 +132,10 @@ The solution is organised into two main libraries:
 
 Each library has a corresponding test project using TUnit.
 
+## Development Notes
+
+This project uses AI tooling (including Claude Code) for code review, validation, simple tasks, and generation of test data. However, the majority of the code is hand-written, and the entire design and architecture is handcrafted.
+
 ## Licence
 
 MIT Licence - see [LICENSE](LICENSE) for details.
