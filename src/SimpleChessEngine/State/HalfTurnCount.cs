@@ -16,14 +16,24 @@ internal readonly record struct HalfTurnCount
         _value = value;
     }
 
-    public static bool TryCreate(int value, out HalfTurnCount result)
+    public static HalfTurnCount FromFen(FenGameState.FenSegment<FenGameState.HalfTurnCounterKind> halfTurnCounterFen)
+    {
+        if (!int.TryParse(halfTurnCounterFen, out int count) || !TryCreate(count, out HalfTurnCount result))
+        {
+            throw new InvalidOperationException("Value provided is not valid for a half turn counter. If you get here there's an error in the FenGameState validation logic.");
+        }
+
+        return result;
+    }
+
+    private static bool TryCreate(int value, out HalfTurnCount result)
     {
         if (value is < 0 or > MaxHalfMoves)
         {
             result = default;
             return false;
         }
-        result = new HalfTurnCount(value);
+        result = new(value);
         return true;
     }
 
@@ -31,11 +41,6 @@ internal readonly record struct HalfTurnCount
 
     public static explicit operator HalfTurnCount(int clock)
     {
-        if (!TryCreate(clock, out HalfTurnCount result))
-        {
-            throw new InvalidCastException("Value provided is not valid");
-        }
-
-        return result;
+        return TryCreate(clock, out HalfTurnCount result) ? result : throw new InvalidCastException("Value provided is not valid");
     }
 }

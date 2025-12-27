@@ -12,7 +12,7 @@ public class BoardTests
     {
         FenGameState fen = FenGameState.DefaultGame;
 
-        Board board = Board.FromFenNotation(fen.PieceLayout);
+        Board board = Board.FromFen(fen.PieceLayout);
 
         using (Assert.Multiple())
         {
@@ -132,7 +132,7 @@ public class BoardTests
         const string fenString = "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 5";
         _ = FenGameState.TryParse(fenString, out FenGameState fen);
 
-        Board board = Board.FromFenNotation(fen.PieceLayout);
+        Board board = Board.FromFen(fen.PieceLayout);
 
         using (Assert.Multiple())
         {

@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 
 namespace SimpleChessEngine.State;
 
+
+
 /// <summary>
 /// A fully validated FEN string representing a board state.
 /// <example>
@@ -14,12 +16,12 @@ namespace SimpleChessEngine.State;
 /// </summary>
 internal ref partial struct FenGameState
 {
-    public ReadOnlySpan<char> PieceLayout;
-    public ReadOnlySpan<char> NextToPlay;
-    public ReadOnlySpan<char> CastlingState;
-    public ReadOnlySpan<char> EnPassantState;
-    public ReadOnlySpan<char> HalfTurnCounter;
-    public ReadOnlySpan<char> FullTurnCounter;
+    public FenSegment<PieceLayoutKind> PieceLayout;
+    public FenSegment<NextToPlayKind> NextToPlay;
+    public FenSegment<CastlingStateKind> CastlingState;
+    public FenSegment<EnPassantStateKind> EnPassantState;
+    public FenSegment<HalfTurnCounterKind> HalfTurnCounter;
+    public FenSegment<FullTurnCounterKind> FullTurnCounter;
 
     /// <summary>
     /// Represents the board at the start of a game.
@@ -45,14 +47,47 @@ internal ref partial struct FenGameState
         int space4 = rawFen.IndexOf(' ', space3 + 1);
         int space5 = rawFen.IndexOf(' ', space4 + 1);
 
-        PieceLayout = fenSpan[..space1];
-        NextToPlay = fenSpan[(space1 + 1)..space2];
-        CastlingState = fenSpan[(space2 + 1)..space3];
-        EnPassantState = fenSpan[(space3 + 1)..space4];
-        HalfTurnCounter = fenSpan[(space4 + 1)..space5];
-        FullTurnCounter = fenSpan[(space5 + 1)..];
+        PieceLayout = new(fenSpan[..space1]);
+        NextToPlay = new(fenSpan[(space1 + 1)..space2]);
+        CastlingState = new(fenSpan[(space2 + 1)..space3]);
+        EnPassantState = new(fenSpan[(space3 + 1)..space4]);
+        HalfTurnCounter = new(fenSpan[(space4 + 1)..space5]);
+        FullTurnCounter = new(fenSpan[(space5 + 1)..]);
     }
 
+    /// <summary>
+    /// Represents a pre-validated segment of a FenGameState
+    /// </summary>
+    /// <typeparam name="TKind">The segment it refers to</typeparam>
+    public readonly ref struct FenSegment<TKind> where TKind : IFenSegmentKind
+    {
+        private readonly ReadOnlySpan<char> _value;
+
+        /// <summary>
+        /// DO NOT USE THIS OUTSIDE OF FenGameState (or test code)
+        /// Unfortunately, there's no access modifier that lets me define a ctor only accessible from the containing type and nowhere else
+        /// If you use this anywhere else, all validation garauntees go out of the window.
+        /// </summary>
+        /// <param name="value"></param>
+        internal FenSegment(ReadOnlySpan<char> value) => _value = value;
+        public ReadOnlySpan<char> Value => _value;
+        public int Length => _value.Length;
+        public bool IsEmpty => _value.IsEmpty;
+        public char this[int index] => _value[index];
+        public override string ToString() => _value.ToString();
+        public ReadOnlySpan<char>.Enumerator GetEnumerator() => _value.GetEnumerator();
+        public ReadOnlySpan<char> Slice(int start) => _value[start..];
+        public ReadOnlySpan<char> Slice(int start, int length) => _value.Slice(start, length);
+        public static implicit operator ReadOnlySpan<char>(FenSegment<TKind> segment) => segment._value;
+    }
+
+    public interface IFenSegmentKind;
+    public readonly struct PieceLayoutKind: IFenSegmentKind;
+    public readonly struct NextToPlayKind: IFenSegmentKind;
+    public readonly struct CastlingStateKind: IFenSegmentKind;
+    public readonly struct EnPassantStateKind: IFenSegmentKind;
+    public readonly struct HalfTurnCounterKind: IFenSegmentKind;
+    public readonly struct FullTurnCounterKind: IFenSegmentKind;
 
 
     public static bool TryParse(string rawFen, out FenGameState fen)

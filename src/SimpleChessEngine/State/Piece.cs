@@ -27,7 +27,7 @@ internal record struct Piece(Colour Colour, PieceType PieceType)
 
 internal enum PieceType
 {
-None,
+    None,
     Pawn,
     Rook,
     Bishop,

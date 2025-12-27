@@ -21,9 +21,9 @@ internal sealed class Board
     /// <returns></returns>
     public Piece GetPieceAt(Rank rank, File file) => _pieces[((int)file * 8) + (int)rank];
 
-    public static Board DefaultBoard => FromFenNotation(FenGameState.DefaultGame.PieceLayout);
+    public static Board DefaultBoard => FromFen(FenGameState.DefaultGame.PieceLayout);
 
-    public static Board FromFenNotation(ReadOnlySpan<char> piecesFenSection)
+    public static Board FromFen(FenGameState.FenSegment<FenGameState.PieceLayoutKind> piecesFenSection)
     {
         Piece[] pieces = new Piece[64];
 
