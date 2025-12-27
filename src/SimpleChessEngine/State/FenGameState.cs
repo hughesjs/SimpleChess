@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace SimpleChessEngine.Notation;
+namespace SimpleChessEngine.State;
 
 /// <summary>
 /// A fully validated FEN string representing a board state.
@@ -15,7 +15,7 @@ namespace SimpleChessEngine.Notation;
 internal ref partial struct FenGameState
 {
     public ReadOnlySpan<char> PieceLayout;
-    public ReadOnlySpan<char> CurrentTurn;
+    public ReadOnlySpan<char> NextToPlay;
     public ReadOnlySpan<char> CastlingState;
     public ReadOnlySpan<char> EnPassantState;
     public ReadOnlySpan<char> HalfTurnCounter;
@@ -46,7 +46,7 @@ internal ref partial struct FenGameState
         int space5 = rawFen.IndexOf(' ', space4 + 1);
 
         PieceLayout = fenSpan[..space1];
-        CurrentTurn = fenSpan[(space1 + 1)..space2];
+        NextToPlay = fenSpan[(space1 + 1)..space2];
         CastlingState = fenSpan[(space2 + 1)..space3];
         EnPassantState = fenSpan[(space3 + 1)..space4];
         HalfTurnCounter = fenSpan[(space4 + 1)..space5];

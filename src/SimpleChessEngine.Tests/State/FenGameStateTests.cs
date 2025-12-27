@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
-using SimpleChessEngine.Notation;
+
+using FenGameState = SimpleChessEngine.State.FenGameState;
 
 namespace SimpleChessEngine.Tests.Notation;
 
@@ -13,7 +14,7 @@ public class FenGameStateTests
 
         // Extract all string values from spans BEFORE any awaits
         string pieceLayout = defaultGame.PieceLayout.ToString();
-        string currentTurn = defaultGame.CurrentTurn.ToString();
+        string currentTurn = defaultGame.NextToPlay.ToString();
         string castlingState = defaultGame.CastlingState.ToString();
         string enPassantState = defaultGame.EnPassantState.ToString();
         string halfTurnCounter = defaultGame.HalfTurnCounter.ToString();
