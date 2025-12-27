@@ -1,9 +1,35 @@
+using System.Threading.Tasks;
 using SimpleChessEngine.Notation;
 
 namespace SimpleChessEngine.Tests.Notation;
 
 public class FenBoardStateTests
 {
+    [Test]
+    public async Task SpansWork()
+    {
+        //rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+        FenBoardState defaultBoard = FenBoardState.DefaultBoard;
+
+        // Extract all string values from spans BEFORE any awaits
+        string pieceLayout = defaultBoard.PieceLayout.ToString();
+        string currentTurn = defaultBoard.CurrentTurn.ToString();
+        string castlingState = defaultBoard.CastlingState.ToString();
+        string enPassantState = defaultBoard.EnPassantState.ToString();
+        string halfTurnCounter = defaultBoard.HalfTurnCounter.ToString();
+        string fullTurnCounter = defaultBoard.FullTurnCounter.ToString();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(pieceLayout).IsEqualTo("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+            await Assert.That(currentTurn).IsEqualTo("w");
+            await Assert.That(castlingState).IsEqualTo("KQkq");
+            await Assert.That(enPassantState).IsEqualTo("-");
+            await Assert.That(halfTurnCounter).IsEqualTo("0");
+            await Assert.That(fullTurnCounter).IsEqualTo("1");
+        }
+    }
+
     [Test]
     public async Task TryParseStartingPositionReturnsTrue()
     {
@@ -95,7 +121,7 @@ public class FenBoardStateTests
     public async Task TryParseOneRankReturnsFalse()
     {
         const string fen = "rnbqkbnr w KQkq - 0 1";
-        bool result = FenBoardState.TryParse(fen, out FenBoardState _);
+        bool result = FenBoardState.TryParse(fen, out FenBoardState inva_);
         await Assert.That(result).IsFalse();
     }
 
