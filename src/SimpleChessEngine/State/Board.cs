@@ -21,16 +21,14 @@ internal sealed class Board
     /// <returns></returns>
     public Piece GetPieceAt(Rank rank, File file) => _pieces[((int)file * 8) + (int)rank];
 
-    public static Board DefaultBoard => FromFenNotation(FenGameState.DefaultGame);
+    public static Board DefaultBoard => FromFenNotation(FenGameState.DefaultGame.PieceLayout);
 
-    public static Board FromFenNotation(FenGameState fen)
+    public static Board FromFenNotation(ReadOnlySpan<char> piecesFenSection)
     {
-        ReadOnlySpan<char> piecesSection = fen.PieceLayout;
-
         Piece[] pieces = new Piece[64];
 
         int pieceArrayIndex = 56; // 8A
-        foreach (char c in piecesSection)
+        foreach (char c in piecesFenSection)
         {
             if (c == '/')
             {
