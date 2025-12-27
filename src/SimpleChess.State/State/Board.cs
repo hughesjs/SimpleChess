@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace SimpleChessEngine.State;
+namespace SimpleChess.State.State;
 
 internal readonly struct Board : IEquatable<Board> // Note: Not a record struct because the standard IEquatable<T> implementation doesn't work with InlineArray
 {

@@ -1,8 +1,8 @@
 using System.Text;
 using System.Threading.Tasks;
-using SimpleChessEngine.State;
+using SimpleChess.State.State;
 
-namespace SimpleChessEngine.Tests.State;
+namespace SimpleChess.State.Tests.State;
 
 public class CastlingRightsTests
 {

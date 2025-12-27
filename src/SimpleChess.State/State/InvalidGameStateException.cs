@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleChessEngine.State;
+namespace SimpleChess.State.State;
 
 public class InvalidGameStateException: Exception
 {

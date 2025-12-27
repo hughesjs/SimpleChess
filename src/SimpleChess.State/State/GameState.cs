@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace SimpleChessEngine.State;
+namespace SimpleChess.State.State;
 
 internal record struct GameState
 {

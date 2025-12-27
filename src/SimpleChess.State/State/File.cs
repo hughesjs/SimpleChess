@@ -1,4 +1,4 @@
-namespace SimpleChessEngine.State;
+namespace SimpleChess.State.State;
 
 public enum File
 {

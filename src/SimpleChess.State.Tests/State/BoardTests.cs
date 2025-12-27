@@ -1,10 +1,10 @@
 using System.Text;
 using System.Threading.Tasks;
 
-using SimpleChessEngine.State;
-using FenGameState = SimpleChessEngine.State.FenGameState;
+using SimpleChess.State.State;
+using FenGameState = SimpleChess.State.State.FenGameState;
 
-namespace SimpleChessEngine.Tests.State;
+namespace SimpleChess.State.Tests.State;
 
 public class BoardTests
 {

@@ -16,7 +16,7 @@
 
   <!-- Project Reference -->
   <ItemGroup>
-    <ProjectReference Include="../SimpleChessEngine/SimpleChessEngine.csproj" />
+    <ProjectReference Include="..\SimpleChess.State\SimpleChess.State.csproj" />
   </ItemGroup>
 
 </Project>

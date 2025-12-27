@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleChessEngine.State;
+namespace SimpleChess.State.State;
 
 /// <summary>
 /// Represents the halfmove clock used for the fifty-move rule.

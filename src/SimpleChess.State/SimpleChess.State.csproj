@@ -19,7 +19,7 @@
 
   <!-- Package Metadata -->
   <PropertyGroup>
-    <PackageId>SimpleChessEngine</PackageId>
+    <PackageId>SimpleChess.State</PackageId>
     <Version>0.1.0</Version>
     <Authors>James Hughes</Authors>
     <Company>James Hughes</Company>
@@ -42,7 +42,7 @@
 
   <!-- InternalsVisibleTo for Testing -->
   <ItemGroup>
-    <InternalsVisibleTo Include="SimpleChessEngine.Tests"/>
+    <InternalsVisibleTo Include="SimpleChess.State.Tests"/>
   </ItemGroup>
 
 </Project>
