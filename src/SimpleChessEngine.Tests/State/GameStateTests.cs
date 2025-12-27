@@ -155,4 +155,32 @@ public class GameStateTests
             }
         }
     }
+
+    [Test]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")]
+    [Arguments("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2")]
+    [Arguments("r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 5")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w K - 0 1")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w Kq - 0 1")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")]
+    [Arguments("8/8/8/8/8/8/8/8 w - - 0 1")]
+    [Arguments("4k3/8/8/8/8/8/8/4K3 w - - 0 1")]
+    [Arguments("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 50 100")]
+    public async Task FromFenAndToFenAreInverses(string fenString)
+    {
+        bool parsed = FenGameState.TryParse(fenString, out FenGameState originalFen);
+        GameState gameState = GameState.FromFen(originalFen);
+        FenGameState roundTripFen = GameState.ToFen(gameState);
+        string roundTripString = roundTripFen.ToString();
+        GameState roundTripGameState = GameState.FromFen(roundTripFen);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(parsed).IsTrue();
+            await Assert.That(roundTripString).IsEqualTo(fenString);
+            await Assert.That(roundTripGameState).IsEqualTo(gameState);
+        }
+    }
 }

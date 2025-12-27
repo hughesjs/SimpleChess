@@ -55,6 +55,7 @@ internal ref partial struct FenGameState
         FullTurnCounter = new(fenSpan[(space5 + 1)..]);
     }
 
+    public override string ToString() => _fen;
     public static bool TryParse(string rawFen, out FenGameState fen)
     {
         fen = default;
