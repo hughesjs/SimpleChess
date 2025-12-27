@@ -4,7 +4,7 @@ namespace SimpleChessEngine.State;
 
 /// <summary>
 /// Represents the halfmove clock used for the fifty-move rule.
-/// Valid range: 0 to 150 (game is automatically drawn at 75 moves/150 half-moves under FIDE Laws of Chess 2014+).
+/// Valid range: 0 to 150 (gameState is automatically drawn at 75 moves/150 half-moves under FIDE Laws of Chess 2014+).
 /// </summary>
 internal readonly record struct HalfTurnCount
 {

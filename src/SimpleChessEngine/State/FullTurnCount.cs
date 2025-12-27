@@ -3,9 +3,9 @@ using System;
 namespace SimpleChessEngine.State;
 
 /// <summary>
-/// Represents the full move number in a chess game.
-/// Valid range: 1 to 8840 (maximum full moves in a legal chess game under FIDE Laws of Chess 2014+).
-/// See: https://wismuth.com/chess/longest-game.html
+/// Represents the full move number in a chess gameState.
+/// Valid range: 1 to 8840 (maximum full moves in a legal chess gameState under FIDE Laws of Chess 2014+).
+/// See: https://wismuth.com/chess/longest-gameState.html
 /// </summary>
 internal readonly record struct FullTurnCount
 {

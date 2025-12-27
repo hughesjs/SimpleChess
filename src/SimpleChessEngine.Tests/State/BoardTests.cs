@@ -128,7 +128,7 @@ public class BoardTests
     [Test]
     public async Task CanParseItalianGamePositionFromFen()
     {
-        // Italian Game after 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6
+        // Italian GameState after 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6
         const string fenString = "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 5";
         _ = FenGameState.TryParse(fenString, out FenGameState fen);
 

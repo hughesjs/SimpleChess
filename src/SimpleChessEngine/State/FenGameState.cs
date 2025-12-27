@@ -10,7 +10,7 @@ namespace SimpleChessEngine.State;
 /// <summary>
 /// A fully validated FEN string representing a board state.
 /// <example>
-/// The FEN string representing a new game is:
+/// The FEN string representing a new gameState is:
 /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 /// </example>
 /// </summary>
@@ -24,7 +24,7 @@ internal ref partial struct FenGameState
     public FenSegment<FullTurnCounterKind> FullTurnCounter;
 
     /// <summary>
-    /// Represents the board at the start of a game.
+    /// Represents the board at the start of a gameState.
     /// <code>
     /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     /// </code>
