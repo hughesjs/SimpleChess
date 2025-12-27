@@ -15,23 +15,23 @@ public class SquareTests
     }
 
     [Test]
-    [Arguments("a3", Rank.A, File.Three)]
-    [Arguments("b3", Rank.B, File.Three)]
-    [Arguments("c3", Rank.C, File.Three)]
-    [Arguments("d3", Rank.D, File.Three)]
-    [Arguments("e3", Rank.E, File.Three)]
-    [Arguments("f3", Rank.F, File.Three)]
-    [Arguments("g3", Rank.G, File.Three)]
-    [Arguments("h3", Rank.H, File.Three)]
-    [Arguments("a6", Rank.A, File.Six)]
-    [Arguments("b6", Rank.B, File.Six)]
-    [Arguments("c6", Rank.C, File.Six)]
-    [Arguments("d6", Rank.D, File.Six)]
-    [Arguments("e6", Rank.E, File.Six)]
-    [Arguments("f6", Rank.F, File.Six)]
-    [Arguments("g6", Rank.G, File.Six)]
-    [Arguments("h6", Rank.H, File.Six)]
-    public async Task ValidSquaresParsesCorrectly(string fenSquare, Rank expectedRank, File expectedFile)
+    [Arguments("a3", File.A, Rank.Three)]
+    [Arguments("b3", File.B, Rank.Three)]
+    [Arguments("c3", File.C, Rank.Three)]
+    [Arguments("d3", File.D, Rank.Three)]
+    [Arguments("e3", File.E, Rank.Three)]
+    [Arguments("f3", File.F, Rank.Three)]
+    [Arguments("g3", File.G, Rank.Three)]
+    [Arguments("h3", File.H, Rank.Three)]
+    [Arguments("a6", File.A, Rank.Six)]
+    [Arguments("b6", File.B, Rank.Six)]
+    [Arguments("c6", File.C, Rank.Six)]
+    [Arguments("d6", File.D, Rank.Six)]
+    [Arguments("e6", File.E, Rank.Six)]
+    [Arguments("f6", File.F, Rank.Six)]
+    [Arguments("g6", File.G, Rank.Six)]
+    [Arguments("h6", File.H, Rank.Six)]
+    public async Task ValidSquaresParsesCorrectly(string fenSquare, File expectedFile, Rank expectedRank)
     {
         FenGameState.FenSegment<FenGameState.EnPassantStateKind> segment = new(fenSquare);
         Square? result = Square.FromFen(segment);
@@ -39,8 +39,8 @@ public class SquareTests
         using (Assert.Multiple())
         {
             await Assert.That(result).IsNotNull();
-            await Assert.That(result!.Value.Rank).IsEqualTo(expectedRank);
             await Assert.That(result!.Value.File).IsEqualTo(expectedFile);
+            await Assert.That(result!.Value.Rank).IsEqualTo(expectedRank);
         }
     }
 }

@@ -2,12 +2,12 @@ namespace SimpleChessEngine.State;
 
 public enum Rank
 {
-    A = 0,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H
+    One = 0, // This is not a mistake. It converts from chess' one-based index to our zero based index
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight
 }

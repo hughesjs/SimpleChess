@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace SimpleChessEngine.State;
 
@@ -13,12 +14,12 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
     }
 
     /// <summary>
-    /// Gets a piece using its rank and file.
+    /// Gets a piece using its file and rank.
     /// </summary>
-    /// <param name="rank">X axis with the leftmost rook at A</param>
-    /// <param name="file">Y axis with the white's back row at One</param>
+    /// <param name="rank">Y axis (row) with White's back row at One</param>
+    /// <param name="file">X axis (column) with the leftmost file at A</param>
     /// <returns></returns>
-    public Piece GetPieceAt(Rank rank, File file) => _pieces[((int)file * 8) + (int)rank];
+    public Piece GetPieceAt(Rank rank, File file) => _pieces[((int)rank * 8) + (int)file];
 
     public Piece GetPieceAt(Square square) => GetPieceAt(square.Rank, square.File);
 
@@ -48,6 +49,45 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
         }
 
         return new(pieces);
+    }
+
+    public static string ToFen(Board board)
+    {
+        StringBuilder fenBuilder = new();
+        for (int rank = 7; rank >= 0; rank--)
+        {
+            int consecutiveEmpties = 0;
+            for (int file = 0; file < 8; file++)
+            {
+                Piece piece = board.GetPieceAt((Rank)rank, (File)file);
+
+                if (piece == default)
+                {
+                    consecutiveEmpties++;
+                    continue;
+                }
+
+                if (consecutiveEmpties != 0)
+                {
+                    fenBuilder.Append(consecutiveEmpties);
+                    consecutiveEmpties = 0;
+                }
+
+                fenBuilder.Append(Piece.ToFen(piece));
+            }
+
+            if (consecutiveEmpties > 0)
+            {
+                fenBuilder.Append(consecutiveEmpties);
+            }
+
+            if (rank != 0)
+            {
+                fenBuilder.Append('/');
+            }
+        }
+
+        return fenBuilder.ToString();
     }
 
     /// <summary>

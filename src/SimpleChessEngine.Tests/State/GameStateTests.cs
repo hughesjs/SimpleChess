@@ -81,8 +81,8 @@ public class GameStateTests
         {
             await Assert.That(parsed).IsTrue();
             await Assert.That(gameState.EnPassantTarget).IsNotNull();
-            await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(Rank.E);
-            await Assert.That(gameState.EnPassantTarget!.Value.File).IsEqualTo(File.Three);
+            await Assert.That(gameState.EnPassantTarget!.Value.File).IsEqualTo(File.E);
+            await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(Rank.Three);
         }
     }
 
@@ -97,8 +97,8 @@ public class GameStateTests
         {
             await Assert.That(parsed).IsTrue();
             await Assert.That(gameState.EnPassantTarget).IsNotNull();
-            await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(Rank.E);
-            await Assert.That(gameState.EnPassantTarget!.Value.File).IsEqualTo(File.Six);
+            await Assert.That(gameState.EnPassantTarget!.Value.File).IsEqualTo(File.E);
+            await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(Rank.Six);
         }
     }
 
@@ -128,11 +128,11 @@ public class GameStateTests
 
     [Test]
     [Arguments("-", null, null)]
-    [Arguments("e3", Rank.E, File.Three)]
-    [Arguments("e6", Rank.E, File.Six)]
-    [Arguments("a3", Rank.A, File.Three)]
-    [Arguments("h6", Rank.H, File.Six)]
-    public async Task GameFromFenPreservesEnPassantTarget(string enPassantFen, Rank? expectedRank, File? expectedFile)
+    [Arguments("e3", File.E, Rank.Three)]
+    [Arguments("e6", File.E, Rank.Six)]
+    [Arguments("a3", File.A, Rank.Three)]
+    [Arguments("h6", File.H, Rank.Six)]
+    public async Task GameFromFenPreservesEnPassantTarget(string enPassantFen, File? expectedFile, Rank? expectedRank)
     {
         FenGameState fen = FenGameState.DefaultGame;
         string fenString = $"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq {enPassantFen} 0 1";
@@ -150,8 +150,8 @@ public class GameStateTests
             else
             {
                 await Assert.That(gameState.EnPassantTarget).IsNotNull();
-                await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(expectedRank!.Value);
                 await Assert.That(gameState.EnPassantTarget!.Value.File).IsEqualTo(expectedFile!.Value);
+                await Assert.That(gameState.EnPassantTarget!.Value.Rank).IsEqualTo(expectedRank!.Value);
             }
         }
     }

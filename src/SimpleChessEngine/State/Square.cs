@@ -4,13 +4,13 @@ namespace SimpleChessEngine.State;
 
 internal readonly struct Square
 {
-    public readonly Rank Rank { get; }
     public readonly File File { get; }
+    public readonly Rank Rank { get; }
 
-    private Square(Rank rank, File file)
+    private Square(File file, Rank rank)
     {
-        Rank = rank;
         File = file;
+        Rank = rank;
     }
 
     public static Square? FromFen(FenGameState.FenSegment<FenGameState.EnPassantStateKind> enPassantState)
@@ -21,32 +21,32 @@ internal readonly struct Square
         }
 
         // Theoretically, these upper case checks aren't needed
-        Rank rank = enPassantState[0] switch
+        File file = enPassantState[0] switch
         {
-            'a' or 'A' => Rank.A,
-            'b' or 'B' => Rank.B,
-            'c' or 'C' => Rank.C,
-            'd' or 'D' => Rank.D,
-            'e' or 'E' => Rank.E,
-            'f' or 'F' => Rank.F,
-            'g' or 'G' => Rank.G,
-            'h' or 'H' => Rank.H,
-            _ => throw new ArgumentException($"Invalid rank: {enPassantState[0]}")
+            'a' or 'A' => File.A,
+            'b' or 'B' => File.B,
+            'c' or 'C' => File.C,
+            'd' or 'D' => File.D,
+            'e' or 'E' => File.E,
+            'f' or 'F' => File.F,
+            'g' or 'G' => File.G,
+            'h' or 'H' => File.H,
+            _ => throw new ArgumentException($"Invalid file: {enPassantState[0]}")
         };
 
-        File file = enPassantState[1] switch
+        Rank rank = enPassantState[1] switch
         {
-            '1' => File.One,
-            '2' => File.Two,
-            '3' => File.Three,
-            '4' => File.Four,
-            '5' => File.Five,
-            '6' => File.Six,
-            '7' => File.Seven,
-            '8' => File.Eight,
-            _ => throw new ArgumentException($"Invalid file: {enPassantState[1]}")
+            '1' => Rank.One,
+            '2' => Rank.Two,
+            '3' => Rank.Three,
+            '4' => Rank.Four,
+            '5' => Rank.Five,
+            '6' => Rank.Six,
+            '7' => Rank.Seven,
+            '8' => Rank.Eight,
+            _ => throw new ArgumentException($"Invalid rank: {enPassantState[1]}")
         };
 
-        return new(rank, file);
+        return new(file, rank);
     }
 }

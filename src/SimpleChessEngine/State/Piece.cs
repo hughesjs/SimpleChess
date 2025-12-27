@@ -23,6 +23,27 @@ internal record struct Piece(Colour Colour, PieceType PieceType)
             _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
         };
     }
+
+    public static char ToFen(Piece piece)
+    {
+        return (piece.Colour, piece.PieceType) switch
+        {
+            (Colour.Black, PieceType.Rook) => 'r',
+            (Colour.Black, PieceType.Knight) => 'n',
+            (Colour.Black, PieceType.Bishop) => 'b',
+            (Colour.Black, PieceType.Queen) => 'q',
+            (Colour.Black, PieceType.King) => 'k',
+            (Colour.Black, PieceType.Pawn) => 'p',
+            (Colour.White, PieceType.Rook) => 'R',
+            (Colour.White, PieceType.Knight) => 'N',
+            (Colour.White, PieceType.Bishop) => 'B',
+            (Colour.White, PieceType.Queen) => 'Q',
+            (Colour.White, PieceType.King) => 'K',
+            (Colour.White, PieceType.Pawn) => 'P',
+            (Colour.None, PieceType.None) => throw new InvalidOperationException("Cannot convert empty square to FEN code. Empty squares are represented by numbers in FEN notation."),
+            _ => throw new InvalidOperationException($"Invalid piece: Colour={piece.Colour}, PieceType={piece.PieceType}")
+        };
+    }
 }
 
 internal enum PieceType

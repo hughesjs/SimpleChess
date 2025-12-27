@@ -31,4 +31,9 @@ internal record struct GameState
         Square? enPassantTarget = Square.FromFen(fen.EnPassantState);
         return new(board, nextToPlay, halfTurnCounter, fullTurnCounter, castlingRights, enPassantTarget);
     }
+
+    // public static FenGameState ToFen(GameState fen)
+    // {
+    //     string boardState = fen.CurrentBoard.
+    // }
 }
