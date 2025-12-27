@@ -1,3 +1,4 @@
+using System.Text;
 using System.Threading.Tasks;
 using SimpleChessEngine.State;
 
@@ -251,5 +252,72 @@ public class CastlingRightsTests
         CastlingRights rights2 = CastlingRights.FromFen(new("K"));
 
         await Assert.That(rights1).IsEqualTo(rights2);
+    }
+
+    [Test]
+    public async Task ToFenGeneratesNoCastlingRights()
+    {
+        CastlingRights rights = default; // default struct, no rights
+        StringBuilder builder = new();
+        CastlingRights.ToFen(rights, builder);
+        string result = builder.ToString();
+
+        await Assert.That(result).IsEqualTo("-");
+    }
+
+    [Test]
+    [Arguments("-")]
+    [Arguments("K")]
+    [Arguments("Q")]
+    [Arguments("k")]
+    [Arguments("q")]
+    [Arguments("KQ")]
+    [Arguments("Kk")]
+    [Arguments("Kq")]
+    [Arguments("Qk")]
+    [Arguments("Qq")]
+    [Arguments("kq")]
+    [Arguments("KQk")]
+    [Arguments("KQq")]
+    [Arguments("Kkq")]
+    [Arguments("Qkq")]
+    [Arguments("KQkq")]
+    public async Task ToFenGeneratesCorrectNotation(string expected)
+    {
+        // Note: CastlingRights constructor is private, so create via FromFen
+        CastlingRights rights = CastlingRights.FromFen(new(expected));
+        StringBuilder builder = new();
+        CastlingRights.ToFen(rights, builder);
+        string result = builder.ToString();
+
+        await Assert.That(result).IsEqualTo(expected);
+    }
+
+    [Test]
+    [Arguments("-")]
+    [Arguments("K")]
+    [Arguments("Q")]
+    [Arguments("k")]
+    [Arguments("q")]
+    [Arguments("KQ")]
+    [Arguments("Kk")]
+    [Arguments("Kq")]
+    [Arguments("Qk")]
+    [Arguments("Qq")]
+    [Arguments("kq")]
+    [Arguments("KQk")]
+    [Arguments("KQq")]
+    [Arguments("Kkq")]
+    [Arguments("Qkq")]
+    [Arguments("KQkq")]
+    public async Task FromFenAndToFenAreInverses(string fenString)
+    {
+        CastlingRights original = CastlingRights.FromFen(new(fenString));
+        StringBuilder builder = new();
+        CastlingRights.ToFen(original, builder);
+        string serialised = builder.ToString();
+        CastlingRights roundTrip = CastlingRights.FromFen(new(serialised));
+
+        await Assert.That(roundTrip).IsEqualTo(original);
     }
 }

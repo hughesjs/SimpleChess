@@ -1,3 +1,4 @@
+using System.Text;
 using System.Threading.Tasks;
 using SimpleChessEngine.State;
 
@@ -42,5 +43,73 @@ public class SquareTests
             await Assert.That(result!.Value.File).IsEqualTo(expectedFile);
             await Assert.That(result!.Value.Rank).IsEqualTo(expectedRank);
         }
+    }
+
+    [Test]
+    public async Task ToFenHandlesNullSquare()
+    {
+        Square? square = null;
+        StringBuilder builder = new();
+        Square.ToFen(square, builder);
+        string result = builder.ToString();
+
+        await Assert.That(result).IsEqualTo("-");
+    }
+
+    [Test]
+    [Arguments("a3")]
+    [Arguments("b3")]
+    [Arguments("c3")]
+    [Arguments("d3")]
+    [Arguments("e3")]
+    [Arguments("f3")]
+    [Arguments("g3")]
+    [Arguments("h3")]
+    [Arguments("a6")]
+    [Arguments("b6")]
+    [Arguments("c6")]
+    [Arguments("d6")]
+    [Arguments("e6")]
+    [Arguments("f6")]
+    [Arguments("g6")]
+    [Arguments("h6")]
+    public async Task ToFenGeneratesCorrectNotation(string expected)
+    {
+        // Note: Square constructor is private, so create via FromFen
+        Square? square = Square.FromFen(new(expected));
+        StringBuilder builder = new();
+        Square.ToFen(square, builder);
+        string result = builder.ToString();
+
+        await Assert.That(result).IsEqualTo(expected);
+    }
+
+    [Test]
+    [Arguments("-")]
+    [Arguments("a3")]
+    [Arguments("b3")]
+    [Arguments("c3")]
+    [Arguments("d3")]
+    [Arguments("e3")]
+    [Arguments("f3")]
+    [Arguments("g3")]
+    [Arguments("h3")]
+    [Arguments("a6")]
+    [Arguments("b6")]
+    [Arguments("c6")]
+    [Arguments("d6")]
+    [Arguments("e6")]
+    [Arguments("f6")]
+    [Arguments("g6")]
+    [Arguments("h6")]
+    public async Task FromFenAndToFenAreInverses(string fenString)
+    {
+        Square? original = Square.FromFen(new(fenString));
+        StringBuilder builder = new();
+        Square.ToFen(original, builder);
+        string serialised = builder.ToString();
+        Square? roundTrip = Square.FromFen(new(serialised));
+
+        await Assert.That(roundTrip).IsEqualTo(original);
     }
 }
