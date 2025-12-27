@@ -4,8 +4,10 @@ on:
     branches:
       - master
     paths:
-      - "src/SimpleChessEngine/**"
-      - "!src/SimpleChessEngine.Tests/**"
+      - "src/SimpleChess.State/**"
+      - "src/SimpleChess.Engine/**"
+      - "!src/SimpleChess.State.Tests/**"
+      - "!src/SimpleChess.Engine.Tests/**"
       - "!**/*.md"
   workflow_dispatch:
 
@@ -92,31 +94,34 @@ jobs:
           path: ./src
           include-hidden-files: true
 
-  package-library:
-    name: Package SimpleChessEngine
+  package:
+    name: Package - ${{ matrix.library }}
     runs-on: ubuntu-latest
     needs:
       - version
       - build-solution
+    strategy:
+      matrix:
+        library: [SimpleChess.State, SimpleChess.Engine]
     steps:
-      - name: Download Solution Build
-        uses: actions/download-artifact@v7
-        with:
-          name: solution-build-output
-          path: ./src
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
           dotnet-quality: "preview"
 
-      - name: Package SimpleChessEngine
+      - name: Download Solution Build
+        uses: actions/download-artifact@v7
+        with:
+          name: solution-build-output
+          path: ./src
+
+      - name: Package ${{ matrix.library }}
         working-directory: src
         env:
           NUGET_PACKAGES: ./.nuget/packages
         run: |
-          dotnet pack SimpleChessEngine/SimpleChessEngine.csproj \
+          dotnet pack ${{ matrix.library }}/${{ matrix.library }}.csproj \
             --no-build \
             --no-restore \
             --configuration Release \
@@ -126,19 +131,22 @@ jobs:
       - name: Upload Package Artifact
         uses: actions/upload-artifact@v6
         with:
-          name: simplechessengine-package-output
+          name: ${{ matrix.library }}-package-output
           path: ./src/artifacts/*.nupkg
 
       - name: Upload Symbols Package Artifact
         uses: actions/upload-artifact@v6
         with:
-          name: simplechessengine-symbols-output
+          name: ${{ matrix.library }}-symbols-output
           path: ./src/artifacts/*.snupkg
 
   run-tests:
-    name: Run Unit Tests
+    name: Test - ${{ matrix.test-project }}
     runs-on: ubuntu-latest
     needs: build-solution
+    strategy:
+      matrix:
+        test-project: [SimpleChess.State.Tests, SimpleChess.Engine.Tests]
     steps:
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
@@ -152,10 +160,10 @@ jobs:
           name: solution-build-output
           path: ./src
 
-      - name: Run Unit Tests
+      - name: Run Tests - ${{ matrix.test-project }}
         timeout-minutes: 5
-        working-directory: ./src/SimpleChessEngine.Tests/bin/Release/net10.0
-        run: dotnet SimpleChessEngine.Tests.dll
+        working-directory: ./src/${{ matrix.test-project }}/bin/Release/net10.0
+        run: dotnet ${{ matrix.test-project }}.dll
 
   publish-release:
     name: Publish Release
@@ -163,7 +171,7 @@ jobs:
     needs:
       - run-tests
       - version
-      - package-library
+      - package
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -199,16 +207,28 @@ jobs:
           writeToFile: false
           includeInvalidCommits: true
 
-      - name: Download Package
+      - name: Download SimpleChess.State Package
         uses: actions/download-artifact@v7
         with:
-          name: simplechessengine-package-output
+          name: SimpleChess.State-package-output
           path: ./artifacts
 
-      - name: Download Symbols
+      - name: Download SimpleChess.State Symbols
         uses: actions/download-artifact@v7
         with:
-          name: simplechessengine-symbols-output
+          name: SimpleChess.State-symbols-output
+          path: ./artifacts
+
+      - name: Download SimpleChess.Engine Package
+        uses: actions/download-artifact@v7
+        with:
+          name: SimpleChess.Engine-package-output
+          path: ./artifacts
+
+      - name: Download SimpleChess.Engine Symbols
+        uses: actions/download-artifact@v7
+        with:
+          name: SimpleChess.Engine-symbols-output
           path: ./artifacts
 
       - name: Create Release
@@ -228,18 +248,30 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - run-tests
-      - package-library
+      - package
     steps:
-      - name: Download Package
+      - name: Download SimpleChess.State Package
         uses: actions/download-artifact@v7
         with:
-          name: simplechessengine-package-output
+          name: SimpleChess.State-package-output
           path: ./artifacts
 
-      - name: Download Symbols
+      - name: Download SimpleChess.State Symbols
         uses: actions/download-artifact@v7
         with:
-          name: simplechessengine-symbols-output
+          name: SimpleChess.State-symbols-output
+          path: ./artifacts
+
+      - name: Download SimpleChess.Engine Package
+        uses: actions/download-artifact@v7
+        with:
+          name: SimpleChess.Engine-package-output
+          path: ./artifacts
+
+      - name: Download SimpleChess.Engine Symbols
+        uses: actions/download-artifact@v7
+        with:
+          name: SimpleChess.Engine-symbols-output
           path: ./artifacts
 
       - name: Publish to GitHub Packages
@@ -269,16 +301,19 @@ jobs:
             --skip-duplicate
 
   cleanup-pre-release-builds:
-    name: Delete Old Pre-Releases
+    name: Cleanup - ${{ matrix.package }}
     runs-on: ubuntu-latest
     needs:
       - publish-release
       - push-package
+    strategy:
+      matrix:
+        package: [SimpleChess.State, SimpleChess.Engine]
     steps:
       - uses: actions/delete-package-versions@v5
         with:
           owner: ${{ github.repository_owner }}
-          package-name: "SimpleChessEngine"
+          package-name: ${{ matrix.package }}
           package-type: "nuget"
           min-versions-to-keep: 0
           delete-only-pre-release-versions: true

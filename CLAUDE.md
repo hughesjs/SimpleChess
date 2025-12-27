@@ -66,12 +66,49 @@ dotnet SimpleChess.State.Tests.dll  # from bin/Release/net10.0 or bin/Debug/net1
 - **Async/Await**: All test methods must be `async Task` and assertions must be `await`ed
 
 ## CI/CD Workflow
-- **Pull Requests**: Build, test, package pre-release to GitHub Packages
-- **Master Branch**: Full release with semantic versioning, publish to NuGet.org and GitHub Packages
-- **Versioning**: Automated semantic versioning based on commit messages
-  - `feat:`, `feature:`, `minor:` → Minor version bump
-  - `fix:`, `bugfix:`, `patch:` → Patch version bump
-  - `major:`, `breaking:` → Major version bump
+
+### Dual-Library Architecture
+The project publishes two NuGet packages with unified versioning:
+- **SimpleChess.State**: Chess state representation (Package ID: `SimpleChess.State`)
+- **SimpleChess.Engine**: Chess engine implementation (Package ID: `SimpleChess.Engine`)
+
+### Unified Versioning Strategy
+Both packages receive identical version numbers per release:
+- **PR Builds (CI)**: `{semver}-{branch}-{run_number}` (e.g., `0.2.0-feature-moves-42`)
+- **Master Releases (CD)**: `{semver}` (e.g., `0.2.0`)
+- **Dependency**: SimpleChess.Engine depends on SimpleChess.State via ProjectReference
+
+### Semantic Versioning
+Automated versioning based on commit messages:
+- `feat:`, `feature:`, `minor:` → Minor version bump
+- `fix:`, `bugfix:`, `patch:` → Patch version bump
+- `major:`, `breaking:` → Major version bump
+
+### Pipeline Structure
+Both CI and CD pipelines use matrix strategies for parallel operations:
+
+**CI Pipeline (Pull Requests)**:
+```
+version → build-solution → test (matrix) → package (matrix) → publish-to-github
+```
+- **Test Matrix**: Runs SimpleChess.State.Tests and SimpleChess.Engine.Tests concurrently
+- **Package Matrix**: Creates both .nupkg files in parallel
+- **Publishing**: Both packages published to GitHub Packages (pre-release versions)
+
+**CD Pipeline (Master Branch)**:
+```
+version → build-solution → test (matrix) → package (matrix) → [publish-release, push-packages, cleanup (matrix)]
+```
+- **Test Matrix**: Runs both test projects in parallel
+- **Package Matrix**: Packages both libraries with same version
+- **Publishing**: Both packages released to GitHub Packages and NuGet.org
+- **Cleanup**: Removes old pre-release versions for both packages
+
+### Pipeline Benefits
+- **Unified Versioning**: Both packages always have matching versions
+- **Parallel Execution**: Tests and packaging run concurrently, reducing pipeline time
+- **Single Build**: Solution compiled once, artefacts reused
+- **Dependency Management**: Engine package automatically references correct State version
 
 ## Testing with act
 Local CI/CD testing available via scripts:
@@ -79,11 +116,23 @@ Local CI/CD testing available via scripts:
 - `./scripts/test-cd.sh` - Test release pipeline
 
 ## Package Configuration
+
+### SimpleChess.State Package
 - Package ID: `SimpleChess.State`
 - Initial Version: `0.1.0`
 - Licence: MIT
 - Includes XML documentation
 - Symbols package (snupkg) for debugging
+- Repository: https://github.com/hughesjs/SimpleChess
+
+### SimpleChess.Engine Package
+- Package ID: `SimpleChess.Engine`
+- Initial Version: `0.1.0`
+- Licence: MIT
+- Includes XML documentation
+- Symbols package (snupkg) for debugging
+- Depends on: SimpleChess.State (same version)
+- Repository: https://github.com/hughesjs/SimpleChess
 
 ## Architecture
 

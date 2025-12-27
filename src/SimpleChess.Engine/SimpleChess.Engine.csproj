@@ -19,18 +19,18 @@
 
   <!-- Package Metadata -->
   <PropertyGroup>
-    <PackageId>SimpleChess.State</PackageId>
+    <PackageId>SimpleChess.Engine</PackageId>
     <Version>0.1.0</Version>
     <Authors>James Hughes</Authors>
     <Company>James Hughes</Company>
-    <Description>A simple chess engine library for C#</Description>
+    <Description>Chess engine implementation for the SimpleChess library</Description>
     <Copyright>Copyright (c) 2025 James Hughes</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/hughesjs/SimpleChess</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hughesjs/SimpleChess</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>chess;engine;game;board;csharp</PackageTags>
+    <PackageTags>chess;engine;game;ai;board;csharp</PackageTags>
   </PropertyGroup>
 
   <!-- Package Contents -->
@@ -40,9 +40,14 @@
     <None Include="$(OutputPath)README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
+  <!-- Project Dependencies -->
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleChess.State\SimpleChess.State.csproj" />
+  </ItemGroup>
+
   <!-- InternalsVisibleTo for Testing -->
   <ItemGroup>
-    <InternalsVisibleTo Include="SimpleChess.State.Tests"/>
+    <InternalsVisibleTo Include="SimpleChess.Engine.Tests"/>
   </ItemGroup>
 
 </Project>
