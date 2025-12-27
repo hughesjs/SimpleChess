@@ -2,7 +2,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using SimpleChess.State.State;
-using FenGameState = SimpleChess.State.State.FenGameState;
 
 namespace SimpleChess.State.Tests.State;
 

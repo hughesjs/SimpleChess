@@ -1,8 +1,6 @@
 using System.Threading.Tasks;
 
-using FenGameState = SimpleChess.State.State.FenGameState;
-
-namespace SimpleChess.State.Tests.Notation;
+namespace SimpleChess.State.Tests.State;
 
 public class FenGameStateTests
 {
