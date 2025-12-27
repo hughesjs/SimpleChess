@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleChess.State.State;
+namespace SimpleChess.State;
 
 /// <summary>
 /// Represents the full move number in a chess gameState.

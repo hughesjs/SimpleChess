@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using SimpleChess.State.State;
 
 namespace SimpleChess.State.Tests.State;
 

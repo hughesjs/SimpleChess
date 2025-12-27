@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleChess.State.State;
+namespace SimpleChess.State;
 
 public record struct Piece(Colour Colour, PieceType PieceType)
 {

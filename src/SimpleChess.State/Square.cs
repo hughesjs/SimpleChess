@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace SimpleChess.State.State;
+namespace SimpleChess.State;
 
 public readonly struct Square
 {

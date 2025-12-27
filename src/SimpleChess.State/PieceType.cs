@@ -1,4 +1,4 @@
-namespace SimpleChess.State.State;
+namespace SimpleChess.State;
 
 public enum PieceType
 {

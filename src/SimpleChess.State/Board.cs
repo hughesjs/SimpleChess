@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
-using SimpleChess.State.State;
 
 namespace SimpleChess.State;
 
