@@ -2,9 +2,9 @@ using System;
 
 namespace SimpleChess.State.State;
 
-internal record struct Piece(Colour Colour, PieceType PieceType)
+public record struct Piece(Colour Colour, PieceType PieceType)
 {
-    public static Piece FromFenCode(char code)
+    internal static Piece FromFenCode(char code)
     {
         return code switch
         {
@@ -24,7 +24,7 @@ internal record struct Piece(Colour Colour, PieceType PieceType)
         };
     }
 
-    public static char ToFen(Piece piece)
+    internal static char ToFen(Piece piece)
     {
         return (piece.Colour, piece.PieceType) switch
         {
@@ -44,22 +44,4 @@ internal record struct Piece(Colour Colour, PieceType PieceType)
             _ => throw new InvalidOperationException($"Invalid piece: Colour={piece.Colour}, PieceType={piece.PieceType}")
         };
     }
-}
-
-internal enum PieceType
-{
-    None,
-    Pawn,
-    Rook,
-    Bishop,
-    Knight,
-    Queen,
-    King
-}
-
-internal enum Colour
-{
-    None,
-    Black,
-    White
 }

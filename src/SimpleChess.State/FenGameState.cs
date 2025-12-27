@@ -14,14 +14,14 @@ namespace SimpleChess.State;
 /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 /// </example>
 /// </summary>
-internal ref partial struct FenGameState
+public ref partial struct FenGameState
 {
-    public FenSegment<PieceLayoutKind> PieceLayout;
-    public FenSegment<NextToPlayKind> NextToPlay;
-    public FenSegment<CastlingStateKind> CastlingState;
-    public FenSegment<EnPassantStateKind> EnPassantState;
-    public FenSegment<HalfTurnCounterKind> HalfTurnCounter;
-    public FenSegment<FullTurnCounterKind> FullTurnCounter;
+    internal FenSegment<PieceLayoutKind> PieceLayout;
+    internal FenSegment<NextToPlayKind> NextToPlay;
+    internal FenSegment<CastlingStateKind> CastlingState;
+    internal FenSegment<EnPassantStateKind> EnPassantState;
+    internal FenSegment<HalfTurnCounterKind> HalfTurnCounter;
+    internal FenSegment<FullTurnCounterKind> FullTurnCounter;
 
     /// <summary>
     /// Represents the board at the start of a gameState.
@@ -132,7 +132,7 @@ internal ref partial struct FenGameState
     /// Represents a pre-validated segment of a FenGameState
     /// </summary>
     /// <typeparam name="TKind">The segment it refers to</typeparam>
-    public readonly ref struct FenSegment<TKind> where TKind : IFenSegmentKind
+    internal readonly ref struct FenSegment<TKind> where TKind : IFenSegmentKind
     {
         private readonly ReadOnlySpan<char> _value;
 

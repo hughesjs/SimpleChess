@@ -3,10 +3,10 @@ using System.Text;
 
 namespace SimpleChess.State.State;
 
-internal readonly struct Square
+public readonly struct Square
 {
-    public readonly File File { get; }
-    public readonly Rank Rank { get; }
+    public File File { get; }
+    public Rank Rank { get; }
 
     private Square(File file, Rank rank)
     {
@@ -14,7 +14,7 @@ internal readonly struct Square
         Rank = rank;
     }
 
-    public static Square? FromFen(FenGameState.FenSegment<FenGameState.EnPassantStateKind> enPassantState)
+    internal static Square? FromFen(FenGameState.FenSegment<FenGameState.EnPassantStateKind> enPassantState)
     {
         if (enPassantState.Length == 1 && enPassantState[0] == '-')
         {
@@ -51,7 +51,7 @@ internal readonly struct Square
         return new(file, rank);
     }
 
-    public static void ToFen(Square? square, StringBuilder builder)
+    internal static void ToFen(Square? square, StringBuilder builder)
     {
         if (square is null)
         {

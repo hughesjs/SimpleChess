@@ -1,5 +1,9 @@
 <Solution>
-  <Folder Name="/Core/">
+  <Folder Name="/Engine/">
+    <Project Path="SimpleChess.Engine.Tests/SimpleChess.Engine.Tests.csproj" />
+    <Project Path="SimpleChess.Engine/SimpleChess.Engine.csproj" />
+  </Folder>
+  <Folder Name="/State/">
     <Project Path="SimpleChess.State.Tests\SimpleChess.State.Tests.csproj" />
     <Project Path="SimpleChess.State\SimpleChess.State.csproj" />
   </Folder>

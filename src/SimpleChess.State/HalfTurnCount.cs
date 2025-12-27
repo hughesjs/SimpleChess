@@ -6,7 +6,7 @@ namespace SimpleChess.State;
 /// Represents the halfmove clock used for the fifty-move rule.
 /// Valid range: 0 to 150 (gameState is automatically drawn at 75 moves/150 half-moves under FIDE Laws of Chess 2014+).
 /// </summary>
-internal readonly record struct HalfTurnCount
+public readonly record struct HalfTurnCount
 {
     private const int MaxHalfMoves = 150;
     private readonly int _value;
@@ -16,7 +16,7 @@ internal readonly record struct HalfTurnCount
         _value = value;
     }
 
-    public static HalfTurnCount FromFen(FenGameState.FenSegment<FenGameState.HalfTurnCounterKind> halfTurnCounterFen)
+    internal static HalfTurnCount FromFen(FenGameState.FenSegment<FenGameState.HalfTurnCounterKind> halfTurnCounterFen)
     {
         if (!int.TryParse(halfTurnCounterFen, out int count) || !TryCreate(count, out HalfTurnCount result))
         {

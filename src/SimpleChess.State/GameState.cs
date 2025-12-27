@@ -3,7 +3,7 @@ using SimpleChess.State.State;
 
 namespace SimpleChess.State;
 
-internal record struct GameState
+public record struct GameState
 {
     public Board CurrentBoard { get; }
     public Colour NextToPlay { get; }

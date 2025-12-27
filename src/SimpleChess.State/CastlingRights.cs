@@ -3,7 +3,7 @@ using System.Text;
 
 namespace SimpleChess.State.State;
 
-internal readonly record struct CastlingRights
+public readonly record struct CastlingRights
 {
     public bool WhiteKingside => _flags.HasFlag(CastlingRightsFlags.WhiteKingside);
     public bool WhiteQueenside => _flags.HasFlag(CastlingRightsFlags.WhiteQueenside);
@@ -28,7 +28,7 @@ internal readonly record struct CastlingRights
     }
 
 
-    public static CastlingRights FromFen(FenGameState.FenSegment<FenGameState.CastlingStateKind> castlingRightsFen)
+    internal static CastlingRights FromFen(FenGameState.FenSegment<FenGameState.CastlingStateKind> castlingRightsFen)
     {
         CastlingRightsFlags flags = CastlingRightsFlags.None;
 
@@ -49,7 +49,7 @@ internal readonly record struct CastlingRights
         return new(flags);
     }
 
-    public static void ToFen(CastlingRights castlingRights, StringBuilder builder)
+    internal static void ToFen(CastlingRights castlingRights, StringBuilder builder)
     {
         int lengthBefore = builder.Length;
 

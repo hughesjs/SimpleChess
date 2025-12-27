@@ -7,7 +7,7 @@ namespace SimpleChess.State.State;
 /// Valid range: 1 to 8840 (maximum full moves in a legal chess gameState under FIDE Laws of Chess 2014+).
 /// See: https://wismuth.com/chess/longest-gameState.html
 /// </summary>
-internal readonly record struct FullTurnCount
+public readonly record struct FullTurnCount
 {
     private const int MaxFullMoves = 8840;
     private readonly int _value;
@@ -17,7 +17,7 @@ internal readonly record struct FullTurnCount
         _value = value;
     }
 
-    public static FullTurnCount FromFen(FenGameState.FenSegment<FenGameState.FullTurnCounterKind> fullTurnCountFen)
+    internal static FullTurnCount FromFen(FenGameState.FenSegment<FenGameState.FullTurnCounterKind> fullTurnCountFen)
     {
         if (!int.TryParse(fullTurnCountFen, out int count) || !TryCreate(count, out FullTurnCount result))
         {

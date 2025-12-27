@@ -5,7 +5,7 @@ using SimpleChess.State.State;
 
 namespace SimpleChess.State;
 
-internal readonly struct Board : IEquatable<Board> // Note: Not a record struct because the standard IEquatable<T> implementation doesn't work with InlineArray
+public readonly struct Board : IEquatable<Board> // Note: Not a record struct because the standard IEquatable<T> implementation doesn't work with InlineArray
 {
     private readonly PieceBuffer _pieces;
 
@@ -26,7 +26,7 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
 
     public static Board DefaultBoard => FromFen(FenGameState.DefaultGame.PieceLayout);
 
-    public static Board FromFen(FenGameState.FenSegment<FenGameState.PieceLayoutKind> piecesFenSection)
+    internal static Board FromFen(FenGameState.FenSegment<FenGameState.PieceLayoutKind> piecesFenSection)
     {
         PieceBuffer pieces = new();
 
@@ -52,7 +52,7 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
         return new(pieces);
     }
 
-    public static void ToFen(Board board, StringBuilder builder)
+    internal static void ToFen(Board board, StringBuilder builder)
     {
         for (int rank = 7; rank >= 0; rank--)
         {
