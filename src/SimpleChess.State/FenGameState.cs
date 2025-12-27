@@ -154,13 +154,13 @@ public ref partial struct FenGameState
         public static implicit operator ReadOnlySpan<char>(FenSegment<TKind> segment) => segment._value;
     }
 
-    public interface IFenSegmentKind;
-    public readonly struct PieceLayoutKind: IFenSegmentKind;
-    public readonly struct NextToPlayKind: IFenSegmentKind;
-    public readonly struct CastlingStateKind: IFenSegmentKind;
-    public readonly struct EnPassantStateKind: IFenSegmentKind;
-    public readonly struct HalfTurnCounterKind: IFenSegmentKind;
-    public readonly struct FullTurnCounterKind: IFenSegmentKind;
+    internal interface IFenSegmentKind;
+    internal readonly struct PieceLayoutKind: IFenSegmentKind;
+    internal readonly struct NextToPlayKind: IFenSegmentKind;
+    internal readonly struct CastlingStateKind: IFenSegmentKind;
+    internal readonly struct EnPassantStateKind: IFenSegmentKind;
+    internal readonly struct HalfTurnCounterKind: IFenSegmentKind;
+    internal readonly struct FullTurnCounterKind: IFenSegmentKind;
 
     [GeneratedRegex(@"^(-|[a-h][36])$")]
     private static partial Regex EnPassantRegex();
