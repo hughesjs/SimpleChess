@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace SimpleChessEngine.State;
 
 internal record struct GameState
@@ -32,8 +34,21 @@ internal record struct GameState
         return new(board, nextToPlay, halfTurnCounter, fullTurnCounter, castlingRights, enPassantTarget);
     }
 
-    // public static FenGameState ToFen(GameState fen)
-    // {
-    //     string boardState = fen.CurrentBoard.
-    // }
+    public static FenGameState ToFen(GameState state)
+    {
+        StringBuilder builder = new(128);
+        Board.ToFen(state.CurrentBoard, builder);
+        builder.Append(' ');
+        builder.Append(state.NextToPlay is Colour.White ? 'w' : 'b');
+        builder.Append(' ');
+        CastlingRights.ToFen(state.CastlingRights, builder);
+        builder.Append(' ');
+        Square.ToFen(state.EnPassantTarget, builder);
+        builder.Append(' ');
+        builder.Append(state.HalfTurnCounter);
+        builder.Append(' ');
+        builder.Append(state.FullTurnCounter);
+
+        return FenGameState.TryParse(builder.ToString(), out FenGameState fen)? fen : throw new InvalidGameStateException("Could not represent game state as valid FEN string");
+    }
 }

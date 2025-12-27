@@ -1,3 +1,4 @@
+using System.Text;
 using System.Threading.Tasks;
 
 using SimpleChessEngine.State;
@@ -182,22 +183,11 @@ public class BoardTests
     public async Task ToFenGeneratesCorrectStartingPosition()
     {
         Board board = Board.DefaultBoard;
-        string fen = Board.ToFen(board);
+        StringBuilder builder = new();
+        Board.ToFen(board, builder);
+        string fen = builder.ToString();
 
         await Assert.That(fen).IsEqualTo("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    }
-
-    [Test]
-    public async Task ToFenRoundTripsWithFromFen()
-    {
-        const string originalFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-        FenGameState fenState = FenGameState.DefaultGame;
-        _ = FenGameState.TryParse($"{originalFen} w KQkq - 0 1", out fenState);
-
-        Board board = Board.FromFen(fenState.PieceLayout);
-        string resultFen = Board.ToFen(board);
-
-        await Assert.That(resultFen).IsEqualTo(originalFen);
     }
 
     [Test]
@@ -208,7 +198,9 @@ public class BoardTests
         _ = FenGameState.TryParse(fenString, out FenGameState fen);
 
         Board board = Board.FromFen(fen.PieceLayout);
-        string resultFen = Board.ToFen(board);
+        StringBuilder builder = new();
+        Board.ToFen(board, builder);
+        string resultFen = builder.ToString();
 
         await Assert.That(resultFen).IsEqualTo("r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R");
     }
@@ -220,7 +212,9 @@ public class BoardTests
         _ = FenGameState.TryParse(emptyBoardFen, out FenGameState fen);
 
         Board board = Board.FromFen(fen.PieceLayout);
-        string resultFen = Board.ToFen(board);
+        StringBuilder builder = new();
+        Board.ToFen(board, builder);
+        string resultFen = builder.ToString();
 
         await Assert.That(resultFen).IsEqualTo("8/8/8/8/8/8/8/8");
     }
@@ -234,7 +228,9 @@ public class BoardTests
     {
         _ = FenGameState.TryParse(fullFen, out FenGameState fen);
         Board board = Board.FromFen(fen.PieceLayout);
-        string resultFen = Board.ToFen(board);
+        StringBuilder builder = new();
+        Board.ToFen(board, builder);
+        string resultFen = builder.ToString();
 
         await Assert.That(resultFen).IsEqualTo(expectedBoardFen);
     }

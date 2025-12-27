@@ -51,9 +51,8 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
         return new(pieces);
     }
 
-    public static string ToFen(Board board)
+    public static void ToFen(Board board, StringBuilder builder)
     {
-        StringBuilder fenBuilder = new();
         for (int rank = 7; rank >= 0; rank--)
         {
             int consecutiveEmpties = 0;
@@ -69,25 +68,23 @@ internal readonly struct Board : IEquatable<Board> // Note: Not a record struct 
 
                 if (consecutiveEmpties != 0)
                 {
-                    fenBuilder.Append(consecutiveEmpties);
+                    builder.Append(consecutiveEmpties);
                     consecutiveEmpties = 0;
                 }
 
-                fenBuilder.Append(Piece.ToFen(piece));
+                builder.Append(Piece.ToFen(piece));
             }
 
             if (consecutiveEmpties > 0)
             {
-                fenBuilder.Append(consecutiveEmpties);
+                builder.Append(consecutiveEmpties);
             }
 
             if (rank != 0)
             {
-                fenBuilder.Append('/');
+                builder.Append('/');
             }
         }
-
-        return fenBuilder.ToString();
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace SimpleChessEngine.State;
 
@@ -46,5 +47,35 @@ internal readonly record struct CastlingRights
         }
 
         return new(flags);
+    }
+
+    public static void ToFen(CastlingRights castlingRights, StringBuilder builder)
+    {
+        int lengthBefore = builder.Length;
+
+        if (castlingRights.WhiteKingside)
+        {
+            builder.Append('K');
+        }
+
+        if (castlingRights.WhiteQueenside)
+        {
+            builder.Append('Q');
+        }
+
+        if (castlingRights.BlackKingside)
+        {
+            builder.Append('k');
+        }
+
+        if (castlingRights.BlackQueenside)
+        {
+            builder.Append('q');
+        }
+
+        if (builder.Length == lengthBefore)
+        {
+            builder.Append('-');
+        }
     }
 }
