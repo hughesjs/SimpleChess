@@ -9,7 +9,7 @@ public class BoardTests
     [Test]
     public async Task CanParseDefaultBoardFromFen()
     {
-        FenBoardState fen = FenBoardState.DefaultBoard;
+        FenGameState fen = FenGameState.DefaultGame;
 
         Board board = Board.FromFenNotation(fen);
 
@@ -129,7 +129,7 @@ public class BoardTests
     {
         // Italian Game after 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6
         const string fenString = "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 5";
-        _ = FenBoardState.TryParse(fenString, out FenBoardState fen);
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
 
         Board board = Board.FromFenNotation(fen);
 

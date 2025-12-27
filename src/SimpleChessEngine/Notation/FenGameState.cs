@@ -12,7 +12,7 @@ namespace SimpleChessEngine.Notation;
 /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 /// </example>
 /// </summary>
-internal ref partial struct FenBoardState
+internal ref partial struct FenGameState
 {
     public ReadOnlySpan<char> PieceLayout;
     public ReadOnlySpan<char> CurrentTurn;
@@ -27,14 +27,14 @@ internal ref partial struct FenBoardState
     /// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     /// </code>
     /// </summary>
-    public static FenBoardState DefaultBoard => new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static FenGameState DefaultGame => new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     private static readonly HashSet<char> ValidPieceCharacters = [..("pnbrqkPNBRQK12345678")];
     private static readonly HashSet<string> ValidCastles = ["-", "K", "Q", "k", "q", "KQ", "Kk", "Kq", "Qk", "Qq", "kq", "KQk", "KQq", "Kkq", "Qkq", "KQkq"];
 
     private readonly string _fen;
 
-    private FenBoardState(string rawFen)
+    private FenGameState(string rawFen)
     {
         _fen = rawFen;
 
@@ -55,7 +55,7 @@ internal ref partial struct FenBoardState
 
 
 
-    public static bool TryParse(string rawFen, out FenBoardState fen)
+    public static bool TryParse(string rawFen, out FenGameState fen)
     {
         fen = default;
         string[] parts = rawFen.Split(' ');
