@@ -1,11 +1,13 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using SimpleChess.State;
 
 namespace SimpleChess.Engine;
 
 public static class SquareExtensions
 {
-    public static bool TryApplyMoveVector(this Square square, Colour colour, MoveVector vector, out Square? targetSquare)
+
+    public static bool TryApplyMoveVector(this Square square, Colour colour, MoveVector vector, [NotNullWhen(true)] out Square? targetSquare)
     {
         int fileOffset = colour == Colour.White ? vector.Files : -vector.Files;
         int rankOffset = colour == Colour.White ? vector.Ranks : -vector.Ranks;

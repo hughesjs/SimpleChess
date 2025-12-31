@@ -11,7 +11,7 @@ namespace SimpleChess.State;
 /// and ranks are labelled 1-8 (White's back row to Black's back row). For example, "e4" represents the square
 /// at file E, rank 4.
 /// </remarks>
-public readonly struct Square
+public readonly record struct Square
 {
     /// <summary>
     /// Gets the file (column) of this square.

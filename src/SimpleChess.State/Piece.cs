@@ -13,6 +13,8 @@ namespace SimpleChess.State;
 /// </remarks>
 public record struct Piece(Colour Colour, PieceType PieceType)
 {
+    public static Piece None = default;
+
     internal static Piece FromFenCode(char code)
     {
         return code switch
