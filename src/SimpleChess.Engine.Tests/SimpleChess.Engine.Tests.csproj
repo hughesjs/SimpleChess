@@ -11,7 +11,7 @@
 
   <!-- Test Framework -->
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="1.5.*" />
+    <PackageReference Include="TUnit" Version="1.7.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleChess.Engine\SimpleChess.Engine.csproj" />

@@ -62,6 +62,7 @@ public class BoardTests
             await Assert.That(board.GetPieceAt(Rank.One, File.F)).IsEqualTo(new Piece(Colour.White, PieceType.Bishop));
             await Assert.That(board.GetPieceAt(Rank.One, File.G)).IsEqualTo(new Piece(Colour.White, PieceType.Knight));
             await Assert.That(board.GetPieceAt(Rank.One, File.H)).IsEqualTo(new Piece(Colour.White, PieceType.Rook));
+            
         }
     }
 

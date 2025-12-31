@@ -35,6 +35,11 @@ public readonly struct Square
         Rank = rank;
     }
 
+    public static Square FromRankAndFile(File file, Rank rank)
+    {
+        return new(file, rank);
+    }
+
     internal static Square? FromFen(FenGameState.FenSegment<FenGameState.EnPassantStateKind> enPassantState)
     {
         if (enPassantState.Length == 1 && enPassantState[0] == '-')
