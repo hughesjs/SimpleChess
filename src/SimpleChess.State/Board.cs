@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -17,6 +18,17 @@ namespace SimpleChess.State;
 /// </remarks>
 public readonly struct Board : IEquatable<Board> // Note: Not a record struct because the standard IEquatable<T> implementation doesn't work with InlineArray
 {
+    public IEnumerable<Square> EnumerateOccupiedSquares()
+    {
+        for (int i = 0; i < 64; i++)
+        {
+            if (_pieces[i] != default)
+            {
+                yield return Square.FromRankAndFile((File)(i % 8), (Rank)(i / 8));
+            }
+        }
+    }
+
     private readonly PieceBuffer _pieces;
 
     private Board(PieceBuffer pieces)

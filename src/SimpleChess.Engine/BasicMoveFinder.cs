@@ -45,7 +45,7 @@ public class BasicMoveFinder: IMoveFinder
         return moves.Where(m => !MoveWouldLeaveSelfInCheck(m));
     }
 
-
+    public IEnumerable<Move> GetLegalMovesForAllPieces(GameState state) => state.CurrentBoard.EnumerateOccupiedSquares().SelectMany(s => GetLegalMovesForPiece(s, state));
 
 
     [Pure]

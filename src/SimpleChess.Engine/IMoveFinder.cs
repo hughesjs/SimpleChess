@@ -8,4 +8,7 @@ public interface IMoveFinder
 {
     [Pure]
     public IEnumerable<Move> GetLegalMovesForPiece(Square pieceSquare, GameState state);
+
+    [Pure]
+    public IEnumerable<Move> GetLegalMovesForAllPieces(GameState state);
 }
