@@ -94,6 +94,14 @@ public class BasicMoveFinderTests
         return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, board, piece])!;
     }
 
+    private static bool InvokeMoveWouldCastleThroughCheck(Move move, Board board, GameState state)
+    {
+        MethodInfo? method = typeof(BasicMoveFinder)
+            .GetMethod("MoveWouldCastleThroughCheck", BindingFlags.NonPublic | BindingFlags.Static);
+
+        return (bool)method!.Invoke(null, [move, board, state])!;
+    }
+
     private static Board CreateBoardFromFen(string fenString)
     {
         bool success = FenGameState.TryParse(fenString, out FenGameState fenState);
@@ -1670,6 +1678,329 @@ public class BasicMoveFinderTests
             await Assert.That(movesArray.Length).IsGreaterThan(0);
             await Assert.That(movesArray.All(m => m.Source == e2)).IsTrue();
         }
+    }
+
+    // ===== MoveWouldCastleThroughCheck() Tests =====
+
+    // ----- Non-Castling Move Tests -----
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsFalseForNormalMoves()
+    {
+        const string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move move = Move.Normal(
+            Square.FromRankAndFile(File.E, Rank.Two),
+            Square.FromRankAndFile(File.E, Rank.Four)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(move, board, state);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsFalseForPromotionMoves()
+    {
+        const string fen = "4k3/4P3/8/8/8/8/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move move = Move.Promotion(
+            Square.FromRankAndFile(File.E, Rank.Seven),
+            Square.FromRankAndFile(File.E, Rank.Eight),
+            PieceType.Queen
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(move, board, state);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsFalseForEnPassantMoves()
+    {
+        const string fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move move = Move.EnPassant(
+            Square.FromRankAndFile(File.E, Rank.Five),
+            Square.FromRankAndFile(File.D, Rank.Six),
+            Square.FromRankAndFile(File.D, Rank.Five)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(move, board, state);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    // ----- Castling Out of Check Tests -----
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsTrueWhenKingInCheck()
+    {
+        // White king on e1 in check from black rook on e8
+        const string fen = "4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckDetectsCheckFromRook()
+    {
+        // White king on e1, black rook on e8 giving check
+        const string fen = "4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move queensideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.C, Rank.One),
+            Square.FromRankAndFile(File.A, Rank.One),
+            Square.FromRankAndFile(File.D, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(queensideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckDetectsCheckFromBishop()
+    {
+        // White king on e1, black bishop on a5 attacking via diagonal
+        const string fen = "8/8/8/b7/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckDetectsCheckFromKnight()
+    {
+        // White king on e1, black knight on d3 giving check
+        const string fen = "8/8/8/8/8/3n4/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move queensideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.C, Rank.One),
+            Square.FromRankAndFile(File.A, Rank.One),
+            Square.FromRankAndFile(File.D, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(queensideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    // ----- Castling Through Check Tests -----
+
+    [Test]
+    public async Task WhiteKingsideCastlingThroughCheckDetected()
+    {
+        // White king on e1, black rook on f8 attacks f1 (intermediate square)
+        const string fen = "5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task WhiteQueensideCastlingThroughCheckDetected()
+    {
+        // White king on e1, black rook on d8 attacks d1 (intermediate square)
+        const string fen = "3r4/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move queensideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.C, Rank.One),
+            Square.FromRankAndFile(File.A, Rank.One),
+            Square.FromRankAndFile(File.D, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(queensideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task BlackKingsideCastlingThroughCheckDetected()
+    {
+        // Black king on e8, white rook on f1 attacks f8 (intermediate square)
+        const string fen = "r3k2r/8/8/8/8/8/8/5R2 b kq - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.Eight),
+            Square.FromRankAndFile(File.G, Rank.Eight),
+            Square.FromRankAndFile(File.H, Rank.Eight),
+            Square.FromRankAndFile(File.F, Rank.Eight)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    [Test]
+    public async Task BlackQueensideCastlingThroughCheckDetected()
+    {
+        // Black king on e8, white rook on d1 attacks d8 (intermediate square)
+        const string fen = "r3k2r/8/8/8/8/8/8/3R4 b kq - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move queensideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.Eight),
+            Square.FromRankAndFile(File.C, Rank.Eight),
+            Square.FromRankAndFile(File.A, Rank.Eight),
+            Square.FromRankAndFile(File.D, Rank.Eight)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(queensideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    // ----- Valid Castling Tests -----
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsFalseForLegalKingsideCastling()
+    {
+        // Clear path, no checks - legal kingside castling
+        const string fen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckReturnsFalseForLegalQueensideCastling()
+    {
+        // Clear path, no checks - legal queenside castling
+        const string fen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move queensideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.C, Rank.One),
+            Square.FromRankAndFile(File.A, Rank.One),
+            Square.FromRankAndFile(File.D, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(queensideCastle, board, state);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    // ----- Edge Case Tests -----
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckAllowsCastlingWhenDestinationUnderAttack()
+    {
+        // G1 (kingside destination) under attack by rook on g8
+        // This method only checks source and intermediate square, not destination
+        // Destination check is handled by MoveWouldLeaveSelfInCheck
+        const string fen = "6r1/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        // Should return false - this method doesn't check destination
+        await Assert.That(result).IsFalse();
+    }
+
+    [Test]
+    public async Task MoveWouldCastleThroughCheckDetectsMultipleThreatSources()
+    {
+        // Both e1 and f1 under attack - king in check and intermediate square attacked
+        const string fen = "4r1r1/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        Board board = state.CurrentBoard;
+
+        Move kingsideCastle = Move.Castling(
+            Square.FromRankAndFile(File.E, Rank.One),
+            Square.FromRankAndFile(File.G, Rank.One),
+            Square.FromRankAndFile(File.H, Rank.One),
+            Square.FromRankAndFile(File.F, Rank.One)
+        );
+
+        bool result = InvokeMoveWouldCastleThroughCheck(kingsideCastle, board, state);
+
+        await Assert.That(result).IsTrue();
     }
 }
 

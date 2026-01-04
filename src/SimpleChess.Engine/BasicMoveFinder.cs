@@ -65,30 +65,12 @@ public class BasicMoveFinder : IMoveFinder
         // Determine intermediate square based on castling direction
         Square kingSource = move.Source;
         Square kingDest = move.Destination;
-        Square intermediateSquare;
 
-        if (kingSource.File < kingDest.File) // Kingside castling
-        {
-            intermediateSquare = Square.FromRankAndFile((File)((int)kingSource.File + 1), kingSource.Rank);
-        }
-        else // Queenside castling
-        {
-            intermediateSquare = Square.FromRankAndFile((File)((int)kingSource.File - 1), kingSource.Rank);
-        }
+        Square intermediateSquare = kingSource.File < kingDest.File
+            ? Square.FromRankAndFile((File)((int)kingSource.File + 1), kingSource.Rank)
+            : Square.FromRankAndFile((File)((int)kingSource.File - 1), kingSource.Rank);
 
-        // Check if king's current square is under attack (cannot castle out of check)
-        if (IsSquareUnderAttack(kingSource, board, opponentColour, movingPlayerColour))
-        {
-            return true;
-        }
-
-        // Check if intermediate square is under attack (cannot castle through check)
-        if (IsSquareUnderAttack(intermediateSquare, board, opponentColour, movingPlayerColour))
-        {
-            return true;
-        }
-
-        return false;
+        return IsSquareUnderAttack(kingSource, board, opponentColour, movingPlayerColour) || IsSquareUnderAttack(intermediateSquare, board, opponentColour, movingPlayerColour);
     }
 
     [Pure]
