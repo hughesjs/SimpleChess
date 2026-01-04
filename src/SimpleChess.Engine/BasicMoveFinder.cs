@@ -275,7 +275,7 @@ public class BasicMoveFinder : IMoveFinder
         if (pieceSquare.Rank is (Rank.Seven or Rank.Two) && pieceSquare.TryApplyMoveVector(piece.Colour, PawnDoubleMove, out Square? targetMoveSquare) &&
             board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
         {
-            yield return Move.Normal(pieceSquare, targetMoveSquare.Value);
+            yield return Move.PawnDouble(pieceSquare, targetMoveSquare.Value);
         }
     }
 }

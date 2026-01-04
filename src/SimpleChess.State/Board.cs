@@ -146,6 +146,12 @@ public readonly struct Board : IEquatable<Board> // Note: Not a record struct be
                 pieces[sourceIndex] = Piece.None;
                 break;
             }
+            case MoveType.PawnDouble:
+            {
+                pieces[destIndex] = _pieces[sourceIndex];
+                pieces[sourceIndex] = Piece.None;
+                break;
+            }
             case MoveType.Promotion:
             {
                 pieces[destIndex] = new(_pieces[sourceIndex].Colour, move.GetPromotionPieceType());

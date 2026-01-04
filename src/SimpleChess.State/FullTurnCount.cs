@@ -56,4 +56,19 @@ public readonly record struct FullTurnCount
     {
         return TryCreate(clock, out FullTurnCount result) ? result : throw new InvalidCastException("Value provided is not valid");
     }
+
+    /// <summary>
+    /// Increments the halfmove clock by one.
+    /// </summary>
+    /// <returns>A new <see cref="HalfTurnCount"/> with the value incremented by one.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when incrementing would exceed the maximum value of 150.</exception>
+    public FullTurnCount Increment()
+    {
+        int newValue = _value + 1;
+        if (newValue > MaxFullMoves)
+        {
+            throw new InvalidOperationException($"Cannot increment beyond maximum half-move count of {MaxFullMoves}");
+        }
+        return new FullTurnCount(newValue);
+    }
 }

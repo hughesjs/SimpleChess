@@ -5,5 +5,6 @@ public enum MoveType: byte
     Normal,
     Promotion,
     EnPassant,
-    Castling
+    Castling,
+    PawnDouble
 }

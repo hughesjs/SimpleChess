@@ -258,6 +258,7 @@ public class BasicMoveFinderTests
             await Assert.That(movesArray).Count().IsEqualTo(1);
             await Assert.That(movesArray[0].Source).IsEqualTo(e2);
             await Assert.That(movesArray[0].Destination).IsEqualTo(e4);
+            await Assert.That(movesArray[0].MoveType).IsEqualTo(MoveType.PawnDouble);
         }
     }
 
@@ -277,6 +278,7 @@ public class BasicMoveFinderTests
             await Assert.That(movesArray).Count().IsEqualTo(1);
             await Assert.That(movesArray[0].Source).IsEqualTo(e7);
             await Assert.That(movesArray[0].Destination).IsEqualTo(e5);
+            await Assert.That(movesArray[0].MoveType).IsEqualTo(MoveType.PawnDouble);
         }
     }
 

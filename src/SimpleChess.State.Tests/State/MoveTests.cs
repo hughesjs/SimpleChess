@@ -54,6 +54,70 @@ public class MoveTests
     }
 
     [Test]
+    [Arguments(File.E, Rank.Two, File.E, Rank.Four)]
+    [Arguments(File.A, Rank.Two, File.A, Rank.Four)]
+    [Arguments(File.H, Rank.Two, File.H, Rank.Four)]
+    public async Task PawnDoubleMovePacksAndUnpacksCorrectly(File sourceFile, Rank sourceRank, File destFile, Rank destRank)
+    {
+        Square source = Square.FromRankAndFile(sourceFile, sourceRank);
+        Square destination = Square.FromRankAndFile(destFile, destRank);
+
+        Move move = Move.PawnDouble(source, destination);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(move.Source.File).IsEqualTo(sourceFile);
+            await Assert.That(move.Source.Rank).IsEqualTo(sourceRank);
+            await Assert.That(move.Destination.File).IsEqualTo(destFile);
+            await Assert.That(move.Destination.Rank).IsEqualTo(destRank);
+            await Assert.That(move.MoveType).IsEqualTo(MoveType.PawnDouble);
+        }
+    }
+
+    [Test]
+    [Arguments(File.E, Rank.Seven, File.E, Rank.Five)]
+    [Arguments(File.D, Rank.Seven, File.D, Rank.Five)]
+    [Arguments(File.F, Rank.Seven, File.F, Rank.Five)]
+    public async Task BlackPawnDoubleMovePacksAndUnpacksCorrectly(File sourceFile, Rank sourceRank, File destFile, Rank destRank)
+    {
+        Square source = Square.FromRankAndFile(sourceFile, sourceRank);
+        Square destination = Square.FromRankAndFile(destFile, destRank);
+
+        Move move = Move.PawnDouble(source, destination);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(move.Source.File).IsEqualTo(sourceFile);
+            await Assert.That(move.Source.Rank).IsEqualTo(sourceRank);
+            await Assert.That(move.Destination.File).IsEqualTo(destFile);
+            await Assert.That(move.Destination.Rank).IsEqualTo(destRank);
+            await Assert.That(move.MoveType).IsEqualTo(MoveType.PawnDouble);
+        }
+    }
+
+    [Test]
+    public async Task PawnDoubleMovePreservesSourceAndDestination()
+    {
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square e4 = Square.FromRankAndFile(File.E, Rank.Four);
+        Square d7 = Square.FromRankAndFile(File.D, Rank.Seven);
+        Square d5 = Square.FromRankAndFile(File.D, Rank.Five);
+
+        Move whiteMove = Move.PawnDouble(e2, e4);
+        Move blackMove = Move.PawnDouble(d7, d5);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(whiteMove.Source).IsEqualTo(e2);
+            await Assert.That(whiteMove.Destination).IsEqualTo(e4);
+            await Assert.That(whiteMove.MoveType).IsEqualTo(MoveType.PawnDouble);
+            await Assert.That(blackMove.Source).IsEqualTo(d7);
+            await Assert.That(blackMove.Destination).IsEqualTo(d5);
+            await Assert.That(blackMove.MoveType).IsEqualTo(MoveType.PawnDouble);
+        }
+    }
+
+    [Test]
     public async Task WhiteKingsideCastlingPacksAndUnpacksCorrectly()
     {
         Square kingSource = Square.FromRankAndFile(File.E, Rank.One);
