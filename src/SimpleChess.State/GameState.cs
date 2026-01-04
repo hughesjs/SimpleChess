@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace SimpleChess.State;
@@ -136,5 +137,10 @@ public record struct GameState
         builder.Append(state.FullTurnCounter);
 
         return FenGameState.TryParse(builder.ToString(), out FenGameState fen)? fen : throw new InvalidGameStateException("Could not represent game state as valid FEN string");
+    }
+
+    public static GameState ApplyMove(Move move)
+    {
+        throw new NotImplementedException();
     }
 }

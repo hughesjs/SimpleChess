@@ -8,7 +8,7 @@ namespace SimpleChess.State;
 /// and indicating which player has the next turn. The None value represents an empty square
 /// or an unspecified colour.
 /// </remarks>
-public enum Colour
+public enum Colour: byte
 {
     None,
     Black,

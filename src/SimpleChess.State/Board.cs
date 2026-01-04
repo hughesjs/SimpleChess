@@ -122,6 +122,65 @@ public readonly struct Board : IEquatable<Board> // Note: Not a record struct be
         }
     }
 
+    internal Board WithMove(Move move)
+    {
+        PieceBuffer pieces = new();
+
+        // Copy old board
+        for (int i = 0; i < 64; i++)
+        {
+            if (_pieces[i] != Piece.None)
+            {
+                pieces[i] = _pieces[i];
+            }
+        }
+
+        int sourceIndex = (int)move.Source.Rank * 8 + (int)move.Source.File;
+        int destIndex = (int)move.Destination.Rank * 8 + (int)move.Destination.File;
+
+        switch (move.MoveType)
+        {
+            case MoveType.Normal:
+            {
+                pieces[destIndex] = _pieces[sourceIndex];
+                pieces[sourceIndex] = Piece.None;
+                break;
+            }
+            case MoveType.Promotion:
+            {
+                pieces[destIndex] = new(_pieces[sourceIndex].Colour, move.GetPromotionPieceType());
+                pieces[sourceIndex] = Piece.None;
+                break;
+            }
+            case MoveType.EnPassant:
+            {
+                Square enPassantTarget = move.GetEnPassantTarget();
+                int enPassantIndex = (int)enPassantTarget.Rank * 8 + (int)enPassantTarget.File;
+
+                pieces[destIndex] = _pieces[sourceIndex];
+                pieces[enPassantIndex] = Piece.None;
+                pieces[sourceIndex] = Piece.None;
+                break;
+            }
+            case MoveType.Castling:
+            {
+                Square rookDestination = move.GetRookDestination();
+                int rookDestinationIndex = (int)rookDestination.Rank * 8 + (int)rookDestination.File;
+
+                Square rookSource = move.GetRookSource();
+                int rookSourceIndex = (int)rookSource.Rank * 8 + (int)rookSource.File;
+
+                pieces[destIndex] = _pieces[sourceIndex];
+                pieces[rookDestinationIndex] = _pieces[rookSourceIndex];
+                pieces[rookSourceIndex] = Piece.None;
+                pieces[sourceIndex] = Piece.None;
+                break;
+            }
+        }
+
+        return new(pieces);
+    }
+
     /// <summary>
     /// Gives us a value type representing the Piece[]
     /// </summary>

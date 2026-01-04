@@ -232,4 +232,228 @@ public class BoardTests
 
         await Assert.That(resultFen).IsEqualTo(expectedBoardFen);
     }
+
+    [Test]
+    public async Task WithMoveNormalMoveUpdatesBoard()
+    {
+        const string fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square source = Square.FromRankAndFile(File.E, Rank.Two);
+        Square destination = Square.FromRankAndFile(File.E, Rank.Four);
+        Move move = Move.Normal(source, destination);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Two, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Four, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+            await Assert.That(board.GetPieceAt(Rank.Two, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveNormalMoveWithCaptureUpdatesBoard()
+    {
+        const string fenString = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square source = Square.FromRankAndFile(File.E, Rank.Four);
+        Square destination = Square.FromRankAndFile(File.E, Rank.Five);
+        Move move = Move.Normal(source, destination);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Four, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Five, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+            await Assert.That(board.GetPieceAt(Rank.Five, File.E)).IsEqualTo(new Piece(Colour.Black, PieceType.Pawn));
+        }
+    }
+
+    [Test]
+    public async Task WithMovePromotionUpdatesBoard()
+    {
+        const string fenString = "8/4P3/8/8/8/8/8/8 w - - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square source = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square destination = Square.FromRankAndFile(File.E, Rank.Eight);
+        Move move = Move.Promotion(source, destination, PieceType.Queen);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Seven, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Queen));
+            await Assert.That(board.GetPieceAt(Rank.Seven, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+        }
+    }
+
+    [Test]
+    public async Task WithMovePromotionWithCaptureUpdatesBoard()
+    {
+        const string fenString = "3r4/4P3/8/8/8/8/8/8 w - - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square source = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square destination = Square.FromRankAndFile(File.D, Rank.Eight);
+        Move move = Move.Promotion(source, destination, PieceType.Knight);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Seven, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.D)).IsEqualTo(new Piece(Colour.White, PieceType.Knight));
+            await Assert.That(board.GetPieceAt(Rank.Eight, File.D)).IsEqualTo(new Piece(Colour.Black, PieceType.Rook));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveEnPassantUpdatesBoard()
+    {
+        const string fenString = "8/8/8/3pP3/8/8/8/8 w - d6 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square source = Square.FromRankAndFile(File.E, Rank.Five);
+        Square destination = Square.FromRankAndFile(File.D, Rank.Six);
+        Square enPassantTarget = Square.FromRankAndFile(File.D, Rank.Five);
+        Move move = Move.EnPassant(source, destination, enPassantTarget);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Five, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Five, File.D)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Six, File.D)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+            await Assert.That(board.GetPieceAt(Rank.Five, File.D)).IsEqualTo(new Piece(Colour.Black, PieceType.Pawn));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveWhiteKingsideCastlingUpdatesBoard()
+    {
+        const string fenString = "8/8/8/8/8/8/8/4K2R w K - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square kingSource = Square.FromRankAndFile(File.E, Rank.One);
+        Square kingDest = Square.FromRankAndFile(File.G, Rank.One);
+        Square rookSource = Square.FromRankAndFile(File.H, Rank.One);
+        Square rookDest = Square.FromRankAndFile(File.F, Rank.One);
+        Move move = Move.Castling(kingSource, kingDest, rookSource, rookDest);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.H)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.G)).IsEqualTo(new Piece(Colour.White, PieceType.King));
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.F)).IsEqualTo(new Piece(Colour.White, PieceType.Rook));
+            await Assert.That(board.GetPieceAt(Rank.One, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.King));
+            await Assert.That(board.GetPieceAt(Rank.One, File.H)).IsEqualTo(new Piece(Colour.White, PieceType.Rook));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveWhiteQueensideCastlingUpdatesBoard()
+    {
+        const string fenString = "8/8/8/8/8/8/8/R3K3 w Q - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square kingSource = Square.FromRankAndFile(File.E, Rank.One);
+        Square kingDest = Square.FromRankAndFile(File.C, Rank.One);
+        Square rookSource = Square.FromRankAndFile(File.A, Rank.One);
+        Square rookDest = Square.FromRankAndFile(File.D, Rank.One);
+        Move move = Move.Castling(kingSource, kingDest, rookSource, rookDest);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.A)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.C)).IsEqualTo(new Piece(Colour.White, PieceType.King));
+            await Assert.That(newBoard.GetPieceAt(Rank.One, File.D)).IsEqualTo(new Piece(Colour.White, PieceType.Rook));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveBlackKingsideCastlingUpdatesBoard()
+    {
+        const string fenString = "4k2r/8/8/8/8/8/8/8 b k - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square kingSource = Square.FromRankAndFile(File.E, Rank.Eight);
+        Square kingDest = Square.FromRankAndFile(File.G, Rank.Eight);
+        Square rookSource = Square.FromRankAndFile(File.H, Rank.Eight);
+        Square rookDest = Square.FromRankAndFile(File.F, Rank.Eight);
+        Move move = Move.Castling(kingSource, kingDest, rookSource, rookDest);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.H)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.G)).IsEqualTo(new Piece(Colour.Black, PieceType.King));
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.F)).IsEqualTo(new Piece(Colour.Black, PieceType.Rook));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveBlackQueensideCastlingUpdatesBoard()
+    {
+        const string fenString = "r3k3/8/8/8/8/8/8/8 b q - 0 1";
+        _ = FenGameState.TryParse(fenString, out FenGameState fen);
+        Board board = Board.FromFen(fen.PieceLayout);
+
+        Square kingSource = Square.FromRankAndFile(File.E, Rank.Eight);
+        Square kingDest = Square.FromRankAndFile(File.C, Rank.Eight);
+        Square rookSource = Square.FromRankAndFile(File.A, Rank.Eight);
+        Square rookDest = Square.FromRankAndFile(File.D, Rank.Eight);
+        Move move = Move.Castling(kingSource, kingDest, rookSource, rookDest);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.A)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.C)).IsEqualTo(new Piece(Colour.Black, PieceType.King));
+            await Assert.That(newBoard.GetPieceAt(Rank.Eight, File.D)).IsEqualTo(new Piece(Colour.Black, PieceType.Rook));
+        }
+    }
+
+    [Test]
+    public async Task WithMoveDoesNotModifyOriginalBoard()
+    {
+        Board board = Board.DefaultBoard;
+        Square source = Square.FromRankAndFile(File.E, Rank.Two);
+        Square destination = Square.FromRankAndFile(File.E, Rank.Four);
+        Move move = Move.Normal(source, destination);
+
+        Board newBoard = board.WithMove(move);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(board.GetPieceAt(Rank.Two, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+            await Assert.That(board.GetPieceAt(Rank.Four, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Two, File.E)).IsDefault();
+            await Assert.That(newBoard.GetPieceAt(Rank.Four, File.E)).IsEqualTo(new Piece(Colour.White, PieceType.Pawn));
+        }
+    }
 }

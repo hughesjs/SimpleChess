@@ -53,6 +53,7 @@ public class BasicMoveFinder : IMoveFinder
     [Pure]
     private static bool MoveWouldLeaveSelfInCheck(Move move)
     {
+        // Use king as super piece approach - can't implement without board piece application
         throw new NotImplementedException();
     }
 
@@ -61,22 +62,34 @@ public class BasicMoveFinder : IMoveFinder
     {
         if (piece.Colour == Colour.Black && stateCastlingRights.BlackKingside)
         {
-            yield return new() { Destination = Square.FromRankAndFile(File.G, Rank.Eight), Source = pieceSquare };
+            Square kingDest = Square.FromRankAndFile(File.G, Rank.Eight);
+            Square rookSource = Square.FromRankAndFile(File.H, Rank.Eight);
+            Square rookDest = Square.FromRankAndFile(File.F, Rank.Eight);
+            yield return Move.Castling(pieceSquare, kingDest, rookSource, rookDest);
         }
 
         if (piece.Colour == Colour.Black && stateCastlingRights.BlackQueenside)
         {
-            yield return new() { Destination = Square.FromRankAndFile(File.C, Rank.Eight), Source = pieceSquare };
+            Square kingDest = Square.FromRankAndFile(File.C, Rank.Eight);
+            Square rookSource = Square.FromRankAndFile(File.A, Rank.Eight);
+            Square rookDest = Square.FromRankAndFile(File.D, Rank.Eight);
+            yield return Move.Castling(pieceSquare, kingDest, rookSource, rookDest);
         }
 
         if (piece.Colour == Colour.White && stateCastlingRights.WhiteKingside)
         {
-            yield return new() { Destination = Square.FromRankAndFile(File.G, Rank.One), Source = pieceSquare };
+            Square kingDest = Square.FromRankAndFile(File.G, Rank.One);
+            Square rookSource = Square.FromRankAndFile(File.H, Rank.One);
+            Square rookDest = Square.FromRankAndFile(File.F, Rank.One);
+            yield return Move.Castling(pieceSquare, kingDest, rookSource, rookDest);
         }
 
         if (piece.Colour == Colour.White && stateCastlingRights.WhiteQueenside)
         {
-            yield return new() { Destination = Square.FromRankAndFile(File.C, Rank.One), Source = pieceSquare };
+            Square kingDest = Square.FromRankAndFile(File.C, Rank.One);
+            Square rookSource = Square.FromRankAndFile(File.A, Rank.One);
+            Square rookDest = Square.FromRankAndFile(File.D, Rank.One);
+            yield return Move.Castling(pieceSquare, kingDest, rookSource, rookDest);
         }
     }
 
@@ -121,7 +134,7 @@ public class BasicMoveFinder : IMoveFinder
         {
             foreach (PieceType promotionPiece in PromotionPieceTypes)
             {
-                yield return new() { Source = source, Destination = destination, PromotionPieceType = promotionPiece };
+                yield return Move.Promotion(source, destination, promotionPiece);
             }
         }
     }
@@ -138,7 +151,9 @@ public class BasicMoveFinder : IMoveFinder
         {
             if (pieceSquare.TryApplyMoveVector(piece.Colour, pawnAttack, out Square? targetSquare) && targetSquare == stateEnPassantTarget.Value)
             {
-                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+                // The captured pawn is at (pieceSquare.Rank, targetSquare.File)
+                Square enPassantTargetPawn = Square.FromRankAndFile(targetSquare.Value.File, pieceSquare.Rank);
+                yield return Move.EnPassant(pieceSquare, targetSquare.Value, enPassantTargetPawn);
                 yield break;
             }
         }
@@ -158,7 +173,7 @@ public class BasicMoveFinder : IMoveFinder
 
             if (pieceAtDestination == Piece.None || pieceAtDestination.Colour != piece.Colour)
             {
-                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+                yield return Move.Normal(pieceSquare, targetSquare.Value);
             }
         }
     }
@@ -177,7 +192,7 @@ public class BasicMoveFinder : IMoveFinder
 
             if (pieceAtDestination == Piece.None || pieceAtDestination.Colour != piece.Colour)
             {
-                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+                yield return Move.Normal(pieceSquare, targetSquare.Value);
             }
         }
     }
@@ -208,7 +223,7 @@ public class BasicMoveFinder : IMoveFinder
 
         if (targetPiece == Piece.None)
         {
-            yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+            yield return Move.Normal(pieceSquare, targetSquare.Value);
         }
         else if (targetPiece.Colour == pieceColour)
         {
@@ -216,7 +231,7 @@ public class BasicMoveFinder : IMoveFinder
         }
         else
         {
-            yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+            yield return Move.Normal(pieceSquare, targetSquare.Value);
             yield break;
         }
 
@@ -234,7 +249,7 @@ public class BasicMoveFinder : IMoveFinder
             if (targetMoveSquare.Value.Rank is not (Rank.Eight or Rank.One) // Filter promotions
                 && board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
             {
-                yield return new() { Source = pieceSquare, Destination = targetMoveSquare.Value };
+                yield return Move.Normal(pieceSquare, targetMoveSquare.Value);
             }
         }
 
@@ -249,7 +264,7 @@ public class BasicMoveFinder : IMoveFinder
             Piece pieceAtDestination = board.GetPieceAt(targetAttackSquare.Value);
             if (pieceAtDestination != Piece.None && pieceAtDestination.Colour != piece.Colour)
             {
-                yield return new() { Source = pieceSquare, Destination = targetAttackSquare.Value };
+                yield return Move.Normal(pieceSquare, targetAttackSquare.Value);
             }
         }
     }
@@ -260,7 +275,7 @@ public class BasicMoveFinder : IMoveFinder
         if (pieceSquare.Rank is (Rank.Seven or Rank.Two) && pieceSquare.TryApplyMoveVector(piece.Colour, PawnDoubleMove, out Square? targetMoveSquare) &&
             board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
         {
-            yield return new() { Source = pieceSquare, Destination = targetMoveSquare.Value };
+            yield return Move.Normal(pieceSquare, targetMoveSquare.Value);
         }
     }
 }

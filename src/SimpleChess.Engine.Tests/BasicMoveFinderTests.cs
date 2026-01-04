@@ -1103,10 +1103,10 @@ public class BasicMoveFinderTests
         {
             await Assert.That(movesArray).Count().IsEqualTo(4);
             await Assert.That(movesArray.All(m => m.Source.Equals(e7) && m.Destination.Equals(e8))).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Queen)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Rook)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Bishop)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Knight)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Queen)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Rook)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Bishop)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Knight)).IsTrue();
         }
     }
 
@@ -1213,10 +1213,10 @@ public class BasicMoveFinderTests
         {
             await Assert.That(movesArray).Count().IsEqualTo(4);
             await Assert.That(movesArray.All(m => m.Source.Equals(e2) && m.Destination.Equals(e1))).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Queen)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Rook)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Bishop)).IsTrue();
-            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Knight)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Queen)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Rook)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Bishop)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.GetPromotionPieceType() == PieceType.Knight)).IsTrue();
         }
     }
 
@@ -1393,9 +1393,8 @@ public class BasicMoveFinderTests
         using (Assert.Multiple())
         {
             await Assert.That(movesArray).Count().IsEqualTo(4);
-            await Assert.That(movesArray.All(m => m.PromotionPieceType.HasValue)).IsTrue();
-            await Assert.That(movesArray.All(m => expectedPromotionTypes.Contains(m.PromotionPieceType!.Value))).IsTrue();
-            await Assert.That(movesArray.Select(m => m.PromotionPieceType).Distinct()).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => expectedPromotionTypes.Contains(m.GetPromotionPieceType()))).IsTrue();
+            await Assert.That(movesArray.Select(m => m.GetPromotionPieceType()).Distinct()).Count().IsEqualTo(4);
         }
     }
 }
