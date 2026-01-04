@@ -6,15 +6,18 @@ using SimpleChess.State;
 
 namespace SimpleChess.Engine;
 
-public class BasicMoveFinder: IMoveFinder
+public class BasicMoveFinder : IMoveFinder
 {
-    private static readonly MoveVector PawnMove = new(){Ranks = 1, Files = 0};
-    private static readonly MoveVector PawnDoubleMove = new(){Ranks = 2, Files = 0};
-    private static readonly MoveVector[] PawnAttacks = [new(){Ranks = 1, Files = 1}, new(){Ranks = 1, Files = -1}];
-    private static readonly MoveVector[] RookUnitVectors = [new(){Ranks = 1, Files = 0}, new() {Ranks = 0, Files = 1}, new()  {Ranks = -1, Files = 0}, new()  {Ranks = 0, Files = -1}];
-    private static readonly MoveVector[] BishopUnitVectors = [new(){Ranks = 1, Files = 1}, new() {Ranks = 1, Files = -1}, new()  {Ranks = -1, Files = -1}, new()  {Ranks = -1, Files = 1}];
+    private static readonly MoveVector PawnMove = new() { Ranks = 1, Files = 0 };
+    private static readonly MoveVector PawnDoubleMove = new() { Ranks = 2, Files = 0 };
+    private static readonly MoveVector[] PawnAttacks = [new() { Ranks = 1, Files = 1 }, new() { Ranks = 1, Files = -1 }];
+    private static readonly MoveVector[] RookUnitVectors = [new() { Ranks = 1, Files = 0 }, new() { Ranks = 0, Files = 1 }, new() { Ranks = -1, Files = 0 }, new() { Ranks = 0, Files = -1 }];
+    private static readonly MoveVector[] BishopUnitVectors = [new() { Ranks = 1, Files = 1 }, new() { Ranks = 1, Files = -1 }, new() { Ranks = -1, Files = -1 }, new() { Ranks = -1, Files = 1 }];
     private static readonly MoveVector[] RoyalMoveVectors = BishopUnitVectors.Concat(RookUnitVectors).ToArray();
-    private static readonly MoveVector[] KnightMoveVectors = [new(){Ranks = 2, Files = 1}, new(){Ranks = 2, Files = -1}, new(){Ranks = -2, Files = 1}, new(){Ranks = -2, Files = -1}, new(){Ranks = 1, Files = 2}, new(){Ranks = 1, Files = -2}, new(){Ranks = -1, Files = 2}, new(){Ranks = -1, Files = -2}];
+    private static readonly MoveVector[] KnightMoveVectors = [new() { Ranks = 2, Files = 1 }, new() { Ranks = 2, Files = -1 }, new() { Ranks = -2, Files = 1 }, new() { Ranks = -2, Files = -1 }, new() { Ranks = 1, Files = 2 }, new() { Ranks = 1, Files = -2 }, new() { Ranks = -1, Files = 2 }, new() { Ranks = -1, Files = -2 }];
+    private static readonly PieceType[] PromotionPieceTypes = [PieceType.Queen, PieceType.Rook, PieceType.Bishop, PieceType.Knight];
+
+    public IEnumerable<Move> GetLegalMovesForAllPieces(GameState state) => state.CurrentBoard.EnumerateOccupiedSquares().SelectMany(s => GetLegalMovesForPiece(s, state));
 
     [Pure]
     public IEnumerable<Move> GetLegalMovesForPiece(Square pieceSquare, GameState state)
@@ -31,7 +34,7 @@ public class BasicMoveFinder: IMoveFinder
         {
             PieceType.None => [],
             PieceType.Pawn => GetPawnBasicMoves(pieceSquare, board, piece)
-                .Concat(GetEnPassantMoves(pieceSquare, board, piece, state.EnPassantTarget))
+                .Concat(GetEnPassantMoves(pieceSquare, piece, state.EnPassantTarget))
                 .Concat(GetPromotionMoves(pieceSquare, board, piece))
                 .Concat(GetPawnDoubleMove(pieceSquare, board, piece)),
             PieceType.Rook => GetRookBasicMoves(pieceSquare, board, piece),
@@ -39,14 +42,12 @@ public class BasicMoveFinder: IMoveFinder
             PieceType.Knight => GetKnightBasicMoves(pieceSquare, board, piece),
             PieceType.Queen => GetQueenBasicMoves(pieceSquare, board, piece),
             PieceType.King => GetKingBasicMoves(pieceSquare, board, piece)
-                .Concat(GetCastlingMoves(pieceSquare, board, piece, state.CastlingRights)),
+                .Concat(GetCastlingMoves(pieceSquare, piece, state.CastlingRights)),
             _ => throw new ArgumentOutOfRangeException(nameof(pieceSquare), pieceSquare, "Piece at pieceSquare square is invalid")
         };
 
         return moves.Where(m => !MoveWouldLeaveSelfInCheck(m));
     }
-
-    public IEnumerable<Move> GetLegalMovesForAllPieces(GameState state) => state.CurrentBoard.EnumerateOccupiedSquares().SelectMany(s => GetLegalMovesForPiece(s, state));
 
 
     [Pure]
@@ -56,21 +57,91 @@ public class BasicMoveFinder: IMoveFinder
     }
 
     [Pure]
-    private static IEnumerable<Move> GetCastlingMoves(Square pieceSquare, Board board, Piece piece, CastlingRights stateCastlingRights)
+    private static IEnumerable<Move> GetCastlingMoves(Square pieceSquare, Piece piece, CastlingRights stateCastlingRights)
     {
-        throw new NotImplementedException();
+        if (piece.Colour == Colour.Black && stateCastlingRights.BlackKingside)
+        {
+            yield return new() { Destination = Square.FromRankAndFile(File.G, Rank.Eight), Source = pieceSquare };
+        }
+
+        if (piece.Colour == Colour.Black && stateCastlingRights.BlackQueenside)
+        {
+            yield return new() { Destination = Square.FromRankAndFile(File.C, Rank.Eight), Source = pieceSquare };
+        }
+
+        if (piece.Colour == Colour.White && stateCastlingRights.WhiteKingside)
+        {
+            yield return new() { Destination = Square.FromRankAndFile(File.G, Rank.One), Source = pieceSquare };
+        }
+
+        if (piece.Colour == Colour.White && stateCastlingRights.WhiteQueenside)
+        {
+            yield return new() { Destination = Square.FromRankAndFile(File.C, Rank.One), Source = pieceSquare };
+        }
     }
 
     [Pure]
     private static IEnumerable<Move> GetPromotionMoves(Square pieceSquare, Board board, Piece piece)
     {
-        throw new NotImplementedException();
+        if (pieceSquare.Rank is not (Rank.Seven or Rank.Two))
+        {
+            yield break;
+        }
+
+        if (pieceSquare.TryApplyMoveVector(piece.Colour, PawnMove, out Square? targetMoveSquare) && board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
+        {
+            foreach (Move move in GenerateEachPromotionMove(pieceSquare, targetMoveSquare.Value))
+            {
+                yield return move;
+            }
+        }
+
+        foreach (MoveVector attack in PawnAttacks)
+        {
+            if (!pieceSquare.TryApplyMoveVector(piece.Colour, attack, out Square? targetAttackSquare))
+            {
+                continue;
+            }
+
+            Piece pieceAtDestination = board.GetPieceAt(targetAttackSquare.Value);
+            if (pieceAtDestination == Piece.None || pieceAtDestination.Colour == piece.Colour)
+            {
+                continue;
+            }
+
+            foreach (Move move in GenerateEachPromotionMove(pieceSquare, targetAttackSquare.Value))
+            {
+                yield return move;
+            }
+        }
+
+        yield break;
+
+        IEnumerable<Move> GenerateEachPromotionMove(Square source, Square destination)
+        {
+            foreach (PieceType promotionPiece in PromotionPieceTypes)
+            {
+                yield return new() { Source = source, Destination = destination, PromotionPieceType = promotionPiece };
+            }
+        }
     }
 
     [Pure]
-    private static IEnumerable<Move> GetEnPassantMoves(Square pieceSquare, Board board, Piece piece, Square? stateEnPassantTarget)
+    private static IEnumerable<Move> GetEnPassantMoves(Square pieceSquare, Piece piece, Square? stateEnPassantTarget)
     {
-        throw new NotImplementedException();
+        if (!stateEnPassantTarget.HasValue)
+        {
+            yield break;
+        }
+
+        foreach (MoveVector pawnAttack in PawnAttacks)
+        {
+            if (pieceSquare.TryApplyMoveVector(piece.Colour, pawnAttack, out Square? targetSquare) && targetSquare == stateEnPassantTarget.Value)
+            {
+                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
+                yield break;
+            }
+        }
     }
 
     [Pure]
@@ -87,7 +158,7 @@ public class BasicMoveFinder: IMoveFinder
 
             if (pieceAtDestination == Piece.None || pieceAtDestination.Colour != piece.Colour)
             {
-                yield return new Move { Source = pieceSquare, Destination = targetSquare.Value };
+                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
             }
         }
     }
@@ -106,20 +177,22 @@ public class BasicMoveFinder: IMoveFinder
 
             if (pieceAtDestination == Piece.None || pieceAtDestination.Colour != piece.Colour)
             {
-                yield return new Move { Source = pieceSquare, Destination = targetSquare.Value };
+                yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
             }
         }
     }
 
     [Pure]
-    private static IEnumerable<Move> GetQueenBasicMoves(Square pieceSquare, Board board, Piece piece) => RoyalMoveVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
-
-
-    [Pure]
-    private static IEnumerable<Move> GetBishopBasicMoves(Square pieceSquare, Board board, Piece piece)=> BishopUnitVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
+    private static IEnumerable<Move> GetQueenBasicMoves(Square pieceSquare, Board board, Piece piece) =>
+        RoyalMoveVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
 
     [Pure]
-    private static IEnumerable<Move> GetRookBasicMoves(Square pieceSquare, Board board, Piece piece) => RookUnitVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
+    private static IEnumerable<Move> GetBishopBasicMoves(Square pieceSquare, Board board, Piece piece) =>
+        BishopUnitVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
+
+    [Pure]
+    private static IEnumerable<Move> GetRookBasicMoves(Square pieceSquare, Board board, Piece piece) =>
+        RookUnitVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
 
     private static IEnumerable<Move> ProjectAlongDirection(Square pieceSquare, Board board, Colour pieceColour, MoveVector unitVector) =>
         ProjectAlongDirection(pieceSquare, pieceSquare, board, pieceColour, unitVector);
@@ -143,7 +216,7 @@ public class BasicMoveFinder: IMoveFinder
         }
         else
         {
-            yield return new() {Source = pieceSquare, Destination = targetSquare.Value};
+            yield return new() { Source = pieceSquare, Destination = targetSquare.Value };
             yield break;
         }
 
@@ -184,7 +257,8 @@ public class BasicMoveFinder: IMoveFinder
     [Pure]
     private static IEnumerable<Move> GetPawnDoubleMove(Square pieceSquare, Board board, Piece piece)
     {
-        if (pieceSquare.Rank is (Rank.Seven or Rank.Two) && pieceSquare.TryApplyMoveVector(piece.Colour, PawnDoubleMove, out Square? targetMoveSquare) && board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
+        if (pieceSquare.Rank is (Rank.Seven or Rank.Two) && pieceSquare.TryApplyMoveVector(piece.Colour, PawnDoubleMove, out Square? targetMoveSquare) &&
+            board.GetPieceAt(targetMoveSquare.Value) == Piece.None)
         {
             yield return new() { Source = pieceSquare, Destination = targetMoveSquare.Value };
         }

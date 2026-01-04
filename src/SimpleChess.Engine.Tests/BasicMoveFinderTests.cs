@@ -70,6 +70,30 @@ public class BasicMoveFinderTests
         return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, board, piece])!;
     }
 
+    private static IEnumerable<Move> InvokeGetEnPassantMoves(Square pieceSquare, Piece piece, Square? enPassantTarget)
+    {
+        MethodInfo? method = typeof(BasicMoveFinder)
+            .GetMethod("GetEnPassantMoves", BindingFlags.NonPublic | BindingFlags.Static);
+
+        return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, piece, enPassantTarget])!;
+    }
+
+    private static IEnumerable<Move> InvokeGetCastlingMoves(Square pieceSquare, Piece piece, CastlingRights castlingRights)
+    {
+        MethodInfo? method = typeof(BasicMoveFinder)
+            .GetMethod("GetCastlingMoves", BindingFlags.NonPublic | BindingFlags.Static);
+
+        return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, piece, castlingRights])!;
+    }
+
+    private static IEnumerable<Move> InvokeGetPromotionMoves(Square pieceSquare, Board board, Piece piece)
+    {
+        MethodInfo? method = typeof(BasicMoveFinder)
+            .GetMethod("GetPromotionMoves", BindingFlags.NonPublic | BindingFlags.Static);
+
+        return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, board, piece])!;
+    }
+
     private static Board CreateBoardFromFen(string fenString)
     {
         bool success = FenGameState.TryParse(fenString, out FenGameState fenState);
@@ -79,6 +103,17 @@ public class BasicMoveFinderTests
         }
         GameState gameState = GameState.FromFen(fenState);
         return gameState.CurrentBoard;
+    }
+
+    private static CastlingRights CreateCastlingRightsFromFen(string fenString)
+    {
+        bool success = FenGameState.TryParse(fenString, out FenGameState fenState);
+        if (!success)
+        {
+            throw new ArgumentException($"Invalid FEN: {fenString}");
+        }
+        GameState gameState = GameState.FromFen(fenState);
+        return gameState.CastlingRights;
     }
 
     [Test]
@@ -817,5 +852,550 @@ public class BasicMoveFinderTests
         IEnumerable<Move> moves = InvokeGetKingBasicMoves(d4, board, blackKing);
 
         await Assert.That(moves.ToArray()).Count().IsEqualTo(8);
+    }
+
+    [Test]
+    public async Task EnPassantWithNoTargetReturnsNoMoves()
+    {
+        Board board = CreateBoardFromFen("8/8/8/4P3/8/8/8/8 w - - 0 1");
+        Square e5 = Square.FromRankAndFile(File.E, Rank.Five);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e5, whitePawn, null);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task WhitePawnCanCaptureEnPassantOnLeft()
+    {
+        Board board = CreateBoardFromFen("8/8/8/4Pp2/8/8/8/8 w - f6 0 1");
+        Square e5 = Square.FromRankAndFile(File.E, Rank.Five);
+        Square f6 = Square.FromRankAndFile(File.F, Rank.Six);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e5, whitePawn, f6);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e5);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(f6);
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnCanCaptureEnPassantOnRight()
+    {
+        Board board = CreateBoardFromFen("8/8/8/3pP3/8/8/8/8 w - d6 0 1");
+        Square e5 = Square.FromRankAndFile(File.E, Rank.Five);
+        Square d6 = Square.FromRankAndFile(File.D, Rank.Six);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e5, whitePawn, d6);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e5);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(d6);
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnCanCaptureEnPassantOnLeft()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/4pP2/8/8/8 w - f3 0 1");
+        Square e4 = Square.FromRankAndFile(File.E, Rank.Four);
+        Square f3 = Square.FromRankAndFile(File.F, Rank.Three);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e4, blackPawn, f3);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e4);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(f3);
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnCanCaptureEnPassantOnRight()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/3Pp3/8/8/8 w - d3 0 1");
+        Square e4 = Square.FromRankAndFile(File.E, Rank.Four);
+        Square d3 = Square.FromRankAndFile(File.D, Rank.Three);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e4, blackPawn, d3);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e4);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(d3);
+        }
+    }
+
+    [Test]
+    public async Task PawnCannotCaptureEnPassantWhenTargetNotDiagonallyAdjacent()
+    {
+        Board board = CreateBoardFromFen("8/8/8/4P3/8/8/8/8 w - b6 0 1");
+        Square e5 = Square.FromRankAndFile(File.E, Rank.Five);
+        Square b6 = Square.FromRankAndFile(File.B, Rank.Six);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e5, whitePawn, b6);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task PawnOnWrongRankCannotCaptureEnPassant()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/4P3/8/8/8 w - d6 0 1");
+        Square e4 = Square.FromRankAndFile(File.E, Rank.Four);
+        Square d6 = Square.FromRankAndFile(File.D, Rank.Six);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetEnPassantMoves(e4, whitePawn, d6);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task WhiteKingCanCastleKingsideWhenRightsAvailable()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w K - 0 1");
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Square g1 = Square.FromRankAndFile(File.G, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e1, whiteKing, rights);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e1);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(g1);
+        }
+    }
+
+    [Test]
+    public async Task WhiteKingCanCastleQueensideWhenRightsAvailable()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w Q - 0 1");
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Square c1 = Square.FromRankAndFile(File.C, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e1, whiteKing, rights);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e1);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(c1);
+        }
+    }
+
+    [Test]
+    public async Task BlackKingCanCastleKingsideWhenRightsAvailable()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w k - 0 1");
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Square g8 = Square.FromRankAndFile(File.G, Rank.Eight);
+        Piece blackKing = new() { Colour = Colour.Black, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e8, blackKing, rights);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e8);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(g8);
+        }
+    }
+
+    [Test]
+    public async Task BlackKingCanCastleQueensideWhenRightsAvailable()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w q - 0 1");
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Square c8 = Square.FromRankAndFile(File.C, Rank.Eight);
+        Piece blackKing = new() { Colour = Colour.Black, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e8, blackKing, rights);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(1);
+            await Assert.That(movesArray[0].Source).IsEqualTo(e8);
+            await Assert.That(movesArray[0].Destination).IsEqualTo(c8);
+        }
+    }
+
+    [Test]
+    public async Task KingCannotCastleWhenNoCastlingRightsAvailable()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w - - 0 1");
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e1, whiteKing, rights);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task KingCannotCastleWhenOnlyOpponentHasCastlingRights()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w kq - 0 1");
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e1, whiteKing, rights);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task KingWithBothCastlingRightsReturnsBothMoves()
+    {
+        CastlingRights rights = CreateCastlingRightsFromFen("8/8/8/8/8/8/8/8 w KQ - 0 1");
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Square g1 = Square.FromRankAndFile(File.G, Rank.One);
+        Square c1 = Square.FromRankAndFile(File.C, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetCastlingMoves(e1, whiteKing, rights);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(2);
+            await Assert.That(movesArray.Any(m => m.Source.Equals(e1) && m.Destination.Equals(g1))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Source.Equals(e1) && m.Destination.Equals(c1))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7PromotesWithForwardMove()
+    {
+        Board board = CreateBoardFromFen("8/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e7) && m.Destination.Equals(e8))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Queen)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Rook)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Bishop)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Knight)).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7PromotesWithLeftCapture()
+    {
+        Board board = CreateBoardFromFen("3rR3/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square d8 = Square.FromRankAndFile(File.D, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e7) && m.Destination.Equals(d8))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7PromotesWithRightCapture()
+    {
+        Board board = CreateBoardFromFen("4Rr2/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square f8 = Square.FromRankAndFile(File.F, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e7) && m.Destination.Equals(f8))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7PromotesWithBothCaptures()
+    {
+        Board board = CreateBoardFromFen("3r1r2/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square d8 = Square.FromRankAndFile(File.D, Rank.Eight);
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Square f8 = Square.FromRankAndFile(File.F, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(12);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(e8))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(d8))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(f8))).IsEqualTo(4);
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7BlockedCannotPromote()
+    {
+        Board board = CreateBoardFromFen("4R3/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task WhitePawnOnRank7CaptureBlockedByOwnPiece()
+    {
+        Board board = CreateBoardFromFen("3R1R2/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Destination.Equals(e8))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2PromotesWithForwardMove()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/8 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e2) && m.Destination.Equals(e1))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Queen)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Rook)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Bishop)).IsTrue();
+            await Assert.That(movesArray.Any(m => m.PromotionPieceType == PieceType.Knight)).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2PromotesWithLeftCapture()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/3Rr3 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square d1 = Square.FromRankAndFile(File.D, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e2) && m.Destination.Equals(d1))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2PromotesWithRightCapture()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/4rR2 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square f1 = Square.FromRankAndFile(File.F, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Source.Equals(e2) && m.Destination.Equals(f1))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2PromotesWithBothCaptures()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/3R1R2 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square d1 = Square.FromRankAndFile(File.D, Rank.One);
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Square f1 = Square.FromRankAndFile(File.F, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(12);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(e1))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(d1))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(f1))).IsEqualTo(4);
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2BlockedCannotPromote()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/4r3 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task BlackPawnOnRank2CaptureBlockedByOwnPiece()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/4p3/3r1r2 w - - 0 1");
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Destination.Equals(e1))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task WhitePawnOnCornerRank7HasLimitedPromotionOptions()
+    {
+        Board board = CreateBoardFromFen("1r6/P7/8/8/8/8/8/8 w - - 0 1");
+        Square a7 = Square.FromRankAndFile(File.A, Rank.Seven);
+        Square a8 = Square.FromRankAndFile(File.A, Rank.Eight);
+        Square b8 = Square.FromRankAndFile(File.B, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(a7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(8);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(a8))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(b8))).IsEqualTo(4);
+        }
+    }
+
+    [Test]
+    public async Task BlackPawnOnCornerRank2HasLimitedPromotionOptions()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/p7/1R6 w - - 0 1");
+        Square a2 = Square.FromRankAndFile(File.A, Rank.Two);
+        Square a1 = Square.FromRankAndFile(File.A, Rank.One);
+        Square b1 = Square.FromRankAndFile(File.B, Rank.One);
+        Piece blackPawn = new() { Colour = Colour.Black, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(a2, board, blackPawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(8);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(a1))).IsEqualTo(4);
+            await Assert.That(movesArray.Count(m => m.Destination.Equals(b1))).IsEqualTo(4);
+        }
+    }
+
+    [Test]
+    public async Task PawnOnWrongRankDoesNotPromote()
+    {
+        Board board = CreateBoardFromFen("8/8/8/4P3/8/8/8/8 w - - 0 1");
+        Square e5 = Square.FromRankAndFile(File.E, Rank.Five);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e5, board, whitePawn);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task PawnOnRank7CannotCaptureOwnPiece()
+    {
+        Board board = CreateBoardFromFen("3R4/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Square e8 = Square.FromRankAndFile(File.E, Rank.Eight);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.Destination.Equals(e8))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task PromotionMovesHaveCorrectPromotionPieceTypeSet()
+    {
+        Board board = CreateBoardFromFen("8/4P3/8/8/8/8/8/8 w - - 0 1");
+        Square e7 = Square.FromRankAndFile(File.E, Rank.Seven);
+        Piece whitePawn = new() { Colour = Colour.White, PieceType = PieceType.Pawn };
+
+        IEnumerable<Move> moves = InvokeGetPromotionMoves(e7, board, whitePawn);
+        Move[] movesArray = moves.ToArray();
+
+        PieceType[] expectedPromotionTypes = [PieceType.Queen, PieceType.Rook, PieceType.Bishop, PieceType.Knight];
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(4);
+            await Assert.That(movesArray.All(m => m.PromotionPieceType.HasValue)).IsTrue();
+            await Assert.That(movesArray.All(m => expectedPromotionTypes.Contains(m.PromotionPieceType!.Value))).IsTrue();
+            await Assert.That(movesArray.Select(m => m.PromotionPieceType).Distinct()).Count().IsEqualTo(4);
+        }
     }
 }
