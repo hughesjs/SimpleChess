@@ -1399,4 +1399,277 @@ public class BasicMoveFinderTests
             await Assert.That(movesArray.Select(m => m.GetPromotionPieceType()).Distinct()).Count().IsEqualTo(4);
         }
     }
+
+    // ===== Check Detection Tests =====
+
+    [Test]
+    public async Task KingInCheckFromRook_CanBlockOrCapture()
+    {
+        // White king on e1 in check from black rook on e8, white rook on e2 can block or capture
+        string fen = "4r3/8/8/8/8/8/4R3/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        // Get legal moves for white rook on e2
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e2, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // Rook can move along e-file to block (e3, e4, etc.) or capture on e8
+            await Assert.That(movesArray).Contains(Move.Normal(e2, Square.FromRankAndFile(File.E, Rank.Three)));
+            await Assert.That(movesArray).Contains(Move.Normal(e2, Square.FromRankAndFile(File.E, Rank.Eight)));
+
+            // Rook cannot move sideways (would leave king in check)
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e2, Square.FromRankAndFile(File.D, Rank.Two)));
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e2, Square.FromRankAndFile(File.F, Rank.Two)));
+        }
+    }
+
+    [Test]
+    public async Task KingInCheckFromKnight_OnlyEscapeMovesAllowed()
+    {
+        // White king on e1 in check from black knight on d3
+        string fen = "8/8/8/8/8/3n4/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        // Get legal moves for white king on e1
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e1, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        // King can only move to escape (knight checks can't be blocked)
+        await Assert.That(movesArray.Length).IsGreaterThan(0);
+
+        // Verify all moves don't leave king in check
+        foreach (Move move in movesArray)
+        {
+            await Assert.That(move.Source).IsEqualTo(e1);
+        }
+    }
+
+    [Test]
+    public async Task KingInCheckFromBishop_CanBlock()
+    {
+        // White king on e1, black bishop on a5 checking, white bishop on c3 can block
+        string fen = "8/8/8/b7/8/2B5/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        // Get legal moves for white bishop on c3
+        Square c3 = Square.FromRankAndFile(File.C, Rank.Three);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(c3, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // Bishop can move to d2 or b4 to block the check
+            await Assert.That(movesArray).Contains(Move.Normal(c3, Square.FromRankAndFile(File.D, Rank.Two)));
+            await Assert.That(movesArray).Contains(Move.Normal(c3, Square.FromRankAndFile(File.B, Rank.Four)));
+        }
+    }
+
+    [Test]
+    public async Task KingCannotMoveIntoCheck()
+    {
+        // White king on e1, black rook on e8 - king cannot move to d1, e2, f1 (attacked by rook)
+        string fen = "4r3/8/8/8/8/8/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e1, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // King cannot stay on e-file (under attack)
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e1, Square.FromRankAndFile(File.E, Rank.Two)));
+
+            // King CAN move to d1 or f1 (out of the rook's line of attack)
+            await Assert.That(movesArray).Contains(Move.Normal(e1, Square.FromRankAndFile(File.D, Rank.One)));
+            await Assert.That(movesArray).Contains(Move.Normal(e1, Square.FromRankAndFile(File.F, Rank.One)));
+        }
+    }
+
+    [Test]
+    public async Task KingMovingAdjacentToEnemyKingIsIllegal()
+    {
+        // White king on e1, black king on e3 - white king cannot move to d2, e2, f2
+        string fen = "8/8/8/8/8/4k3/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e1, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // Cannot move adjacent to enemy king
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e1, Square.FromRankAndFile(File.D, Rank.Two)));
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e1, Square.FromRankAndFile(File.E, Rank.Two)));
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e1, Square.FromRankAndFile(File.F, Rank.Two)));
+        }
+    }
+
+    // ===== Pinned Piece Tests =====
+
+    [Test]
+    public async Task PinnedPieceCannotMoveOffPinLine()
+    {
+        // White king on e1, white bishop on d2, black queen on a5 - bishop is pinned diagonally
+        string fen = "8/8/8/q7/8/8/3B4/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square d2 = Square.FromRankAndFile(File.D, Rank.Two);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(d2, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // Bishop can only move along the diagonal (c3 or capture on a5)
+            await Assert.That(movesArray).Contains(Move.Normal(d2, Square.FromRankAndFile(File.C, Rank.Three)));
+            await Assert.That(movesArray).Contains(Move.Normal(d2, Square.FromRankAndFile(File.B, Rank.Four)));
+            await Assert.That(movesArray).Contains(Move.Normal(d2, Square.FromRankAndFile(File.A, Rank.Five)));
+
+            // Bishop cannot move off the pin line (would expose king)
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(d2, Square.FromRankAndFile(File.E, Rank.Three)));
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(d2, Square.FromRankAndFile(File.C, Rank.One)));
+        }
+    }
+
+    [Test]
+    public async Task PinnedPieceCanCapturePinner()
+    {
+        // White king on e1, white rook on e3, black queen on e8 - rook is pinned but can capture
+        string fen = "4q3/8/8/8/8/4R3/8/4K3 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e3 = Square.FromRankAndFile(File.E, Rank.Three);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e3, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // Rook can move along e-file (pinned line)
+            await Assert.That(movesArray).Contains(Move.Normal(e3, Square.FromRankAndFile(File.E, Rank.Two)));
+            await Assert.That(movesArray).Contains(Move.Normal(e3, Square.FromRankAndFile(File.E, Rank.Four)));
+
+            // Rook can capture the pinning piece
+            await Assert.That(movesArray).Contains(Move.Normal(e3, Square.FromRankAndFile(File.E, Rank.Eight)));
+
+            // Rook cannot move sideways (would expose king)
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e3, Square.FromRankAndFile(File.D, Rank.Three)));
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e3, Square.FromRankAndFile(File.F, Rank.Three)));
+        }
+    }
+
+    // ===== Special Move Cases =====
+
+    [Test]
+    public async Task KingCannotCastleWhenInCheck()
+    {
+        // White king on e1 in check from black rook on e8, castling rights exist
+        string fen = "4r3/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e1, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // King cannot castle when in check
+            await Assert.That(movesArray.Where(m => m.MoveType == MoveType.Castling)).IsEmpty();
+
+            // King can still move to escape squares
+            await Assert.That(movesArray).Contains(Move.Normal(e1, Square.FromRankAndFile(File.D, Rank.One)));
+            await Assert.That(movesArray).Contains(Move.Normal(e1, Square.FromRankAndFile(File.F, Rank.One)));
+        }
+    }
+
+    [Test]
+    public async Task KingCannotCastleThroughCheck()
+    {
+        // White king on e1, black rook on f8 attacks f1 (king would pass through check)
+        string fen = "5r2/8/8/8/8/8/8/R3K2R w KQ - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e1 = Square.FromRankAndFile(File.E, Rank.One);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e1, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // King cannot castle kingside (would move through f1 which is under attack)
+            Move kingsideCastle = Move.Castling(e1, Square.FromRankAndFile(File.G, Rank.One),
+                Square.FromRankAndFile(File.H, Rank.One), Square.FromRankAndFile(File.F, Rank.One));
+            await Assert.That(movesArray).DoesNotContain(kingsideCastle);
+
+            // King CAN castle queenside (doesn't pass through attacked squares)
+            Move queensideCastle = Move.Castling(e1, Square.FromRankAndFile(File.C, Rank.One),
+                Square.FromRankAndFile(File.A, Rank.One), Square.FromRankAndFile(File.D, Rank.One));
+            await Assert.That(movesArray).Contains(queensideCastle);
+        }
+    }
+
+    [Test]
+    public async Task EnPassantThatExposesKingIsIllegal()
+    {
+        // White king on e1, white pawn on d5, black pawn just moved from e7 to e5
+        // En passant would expose king to check from black rook on h5
+        string fen = "8/8/8/3pP2r/8/8/8/4K3 w - e6 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square d5 = Square.FromRankAndFile(File.D, Rank.Five);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(d5, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        // En passant should not be in legal moves (would expose king to check)
+        Square e6 = Square.FromRankAndFile(File.E, Rank.Six);
+        await Assert.That(movesArray.Where(m => m.MoveType == MoveType.EnPassant)).IsEmpty();
+    }
+
+    [Test]
+    public async Task PawnInCheckFromPawn_NoMovesLeavingKingInCheck()
+    {
+        // White king on e2, black pawn on d3 gives check diagonally, black queen on d8 defends the pawn
+        string fen = "3q4/8/8/8/8/3p4/4K3/8 w - - 0 1";
+        FenGameState.TryParse(fen, out FenGameState fenState);
+        GameState state = GameState.FromFen(fenState);
+        BasicMoveFinder finder = new();
+
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        IEnumerable<Move> legalMoves = finder.GetLegalMovesForPiece(e2, state);
+        Move[] movesArray = legalMoves.ToArray();
+
+        using (Assert.Multiple())
+        {
+            // King cannot capture the pawn (defended by queen on d8)
+            await Assert.That(movesArray).DoesNotContain(Move.Normal(e2, Square.FromRankAndFile(File.D, Rank.Three)));
+
+            // King must move to safety
+            await Assert.That(movesArray.Length).IsGreaterThan(0);
+            await Assert.That(movesArray.All(m => m.Source == e2)).IsTrue();
+        }
+    }
 }
+

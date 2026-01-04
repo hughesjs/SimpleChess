@@ -46,15 +46,273 @@ public class BasicMoveFinder : IMoveFinder
             _ => throw new ArgumentOutOfRangeException(nameof(pieceSquare), pieceSquare, "Piece at pieceSquare square is invalid")
         };
 
-        return moves.Where(m => !MoveWouldLeaveSelfInCheck(m));
+        return moves.Where(m => !MoveWouldLeaveSelfInCheck(m, board, state) && !MoveWouldCastleThroughCheck(m, board, state));
     }
 
 
     [Pure]
-    private static bool MoveWouldLeaveSelfInCheck(Move move)
+    private static bool MoveWouldCastleThroughCheck(Move move, Board board, GameState state)
     {
-        // Use king as super piece approach - can't implement without board piece application
-        throw new NotImplementedException();
+        // Only applies to castling moves
+        if (move.MoveType != MoveType.Castling)
+        {
+            return false;
+        }
+
+        Colour movingPlayerColour = state.NextToPlay;
+        Colour opponentColour = movingPlayerColour == Colour.White ? Colour.Black : Colour.White;
+
+        // Determine intermediate square based on castling direction
+        Square kingSource = move.Source;
+        Square kingDest = move.Destination;
+        Square intermediateSquare;
+
+        if (kingSource.File < kingDest.File) // Kingside castling
+        {
+            intermediateSquare = Square.FromRankAndFile((File)((int)kingSource.File + 1), kingSource.Rank);
+        }
+        else // Queenside castling
+        {
+            intermediateSquare = Square.FromRankAndFile((File)((int)kingSource.File - 1), kingSource.Rank);
+        }
+
+        // Check if king's current square is under attack (cannot castle out of check)
+        if (IsSquareUnderAttack(kingSource, board, opponentColour, movingPlayerColour))
+        {
+            return true;
+        }
+
+        // Check if intermediate square is under attack (cannot castle through check)
+        if (IsSquareUnderAttack(intermediateSquare, board, opponentColour, movingPlayerColour))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    [Pure]
+    private static bool MoveWouldLeaveSelfInCheck(Move move, Board board, GameState state)
+    {
+        // Apply the move to create a new game state
+        GameState newState = state.ApplyMove(move);
+        Board newBoard = newState.CurrentBoard;
+        Colour movingPlayerColour = state.NextToPlay;
+        Colour opponentColour = movingPlayerColour == Colour.White ? Colour.Black : Colour.White;
+
+        // Find the king position after the move
+        Piece movedPiece = board.GetPieceAt(move.Source);
+        Square kingPosition;
+
+        if (movedPiece.PieceType == PieceType.King)
+        {
+            kingPosition = move.Destination;
+        }
+        else
+        {
+            // Find king by iterating occupied squares on the new board
+            kingPosition = newBoard.EnumerateOccupiedSquares()
+                .First(sq => newBoard.GetPieceAt(sq) is { PieceType: PieceType.King, Colour: var c } && c == movingPlayerColour);
+        }
+
+        // Check if king-as-rook can see enemy rook or queen
+        foreach (MoveVector direction in RookUnitVectors)
+        {
+            for (int i = 1; i <= 7; i++)
+            {
+                if (!kingPosition.TryApplyMoveVector(Colour.White, direction * i, out Square? square))
+                {
+                    break;
+                }
+
+                Piece piece = newBoard.GetPieceAt(square.Value);
+                if (piece == Piece.None)
+                {
+                    continue;
+                }
+
+                if (piece.Colour == opponentColour && (piece.PieceType == PieceType.Rook || piece.PieceType == PieceType.Queen))
+                {
+                    return true; // In check from rook/queen
+                }
+
+                break; // Blocked by any piece
+            }
+        }
+
+        // Check if king-as-bishop can see enemy bishop or queen
+        foreach (MoveVector direction in BishopUnitVectors)
+        {
+            for (int i = 1; i <= 7; i++)
+            {
+                if (!kingPosition.TryApplyMoveVector(Colour.White, direction * i, out Square? square))
+                {
+                    break;
+                }
+
+                Piece piece = newBoard.GetPieceAt(square.Value);
+                if (piece == Piece.None)
+                {
+                    continue;
+                }
+
+                if (piece.Colour == opponentColour && (piece.PieceType == PieceType.Bishop || piece.PieceType == PieceType.Queen))
+                {
+                    return true; // In check from bishop/queen
+                }
+
+                break; // Blocked by any piece
+            }
+        }
+
+        // Check if king-as-knight can see enemy knight
+        foreach (MoveVector knightMove in KnightMoveVectors)
+        {
+            if (!kingPosition.TryApplyMoveVector(Colour.White, knightMove, out Square? square))
+            {
+                continue;
+            }
+
+            Piece piece = newBoard.GetPieceAt(square.Value);
+            if (piece.Colour == opponentColour && piece.PieceType == PieceType.Knight)
+            {
+                return true; // In check from knight
+            }
+        }
+
+        // Check if king is adjacent to enemy king (illegal position)
+        foreach (MoveVector kingMove in RoyalMoveVectors)
+        {
+            if (!kingPosition.TryApplyMoveVector(Colour.White, kingMove, out Square? square))
+            {
+                continue;
+            }
+
+            Piece piece = newBoard.GetPieceAt(square.Value);
+            if (piece.Colour == opponentColour && piece.PieceType == PieceType.King)
+            {
+                return true; // Adjacent to enemy king (illegal)
+            }
+        }
+
+        // Check if king-as-pawn can see enemy pawn
+        // Pawns attack diagonally, so check diagonal squares in front of king
+        foreach (MoveVector pawnAttack in PawnAttacks)
+        {
+            if (!kingPosition.TryApplyMoveVector(movingPlayerColour, pawnAttack, out Square? square))
+            {
+                continue;
+            }
+
+            Piece piece = newBoard.GetPieceAt(square.Value);
+            if (piece.Colour == opponentColour && piece.PieceType == PieceType.Pawn)
+            {
+                return true; // In check from pawn
+            }
+        }
+
+        return false; // Not in check
+    }
+
+    [Pure]
+    private static bool IsSquareUnderAttack(Square square, Board board, Colour attackingColour, Colour defendingColour)
+    {
+        // Check if square-as-rook can see enemy rook or queen
+        foreach (MoveVector direction in RookUnitVectors)
+        {
+            for (int i = 1; i <= 7; i++)
+            {
+                if (!square.TryApplyMoveVector(Colour.White, direction * i, out Square? targetSquare))
+                {
+                    break;
+                }
+
+                Piece piece = board.GetPieceAt(targetSquare.Value);
+                if (piece == Piece.None)
+                {
+                    continue;
+                }
+
+                if (piece.Colour == attackingColour && (piece.PieceType == PieceType.Rook || piece.PieceType == PieceType.Queen))
+                {
+                    return true; // Under attack from rook/queen
+                }
+
+                break; // Blocked by any piece
+            }
+        }
+
+        // Check if square-as-bishop can see enemy bishop or queen
+        foreach (MoveVector direction in BishopUnitVectors)
+        {
+            for (int i = 1; i <= 7; i++)
+            {
+                if (!square.TryApplyMoveVector(Colour.White, direction * i, out Square? targetSquare))
+                {
+                    break;
+                }
+
+                Piece piece = board.GetPieceAt(targetSquare.Value);
+                if (piece == Piece.None)
+                {
+                    continue;
+                }
+
+                if (piece.Colour == attackingColour && (piece.PieceType == PieceType.Bishop || piece.PieceType == PieceType.Queen))
+                {
+                    return true; // Under attack from bishop/queen
+                }
+
+                break; // Blocked by any piece
+            }
+        }
+
+        // Check if square-as-knight can see enemy knight
+        foreach (MoveVector knightMove in KnightMoveVectors)
+        {
+            if (!square.TryApplyMoveVector(Colour.White, knightMove, out Square? targetSquare))
+            {
+                continue;
+            }
+
+            Piece piece = board.GetPieceAt(targetSquare.Value);
+            if (piece.Colour == attackingColour && piece.PieceType == PieceType.Knight)
+            {
+                return true; // Under attack from knight
+            }
+        }
+
+        // Check if square is adjacent to enemy king
+        foreach (MoveVector kingMove in RoyalMoveVectors)
+        {
+            if (!square.TryApplyMoveVector(Colour.White, kingMove, out Square? targetSquare))
+            {
+                continue;
+            }
+
+            Piece piece = board.GetPieceAt(targetSquare.Value);
+            if (piece.Colour == attackingColour && piece.PieceType == PieceType.King)
+            {
+                return true; // Under attack from king
+            }
+        }
+
+        // Check if square-as-pawn can see enemy pawn
+        foreach (MoveVector pawnAttack in PawnAttacks)
+        {
+            if (!square.TryApplyMoveVector(defendingColour, pawnAttack, out Square? targetSquare))
+            {
+                continue;
+            }
+
+            Piece piece = board.GetPieceAt(targetSquare.Value);
+            if (piece.Colour == attackingColour && piece.PieceType == PieceType.Pawn)
+            {
+                return true; // Under attack from pawn
+            }
+        }
+
+        return false; // Not under attack
     }
 
     [Pure]

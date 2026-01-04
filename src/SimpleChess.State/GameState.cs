@@ -139,8 +139,60 @@ public record struct GameState
         return FenGameState.TryParse(builder.ToString(), out FenGameState fen)? fen : throw new InvalidGameStateException("Could not represent game state as valid FEN string");
     }
 
-    public static GameState ApplyMove(Move move)
+    public GameState ApplyMove(Move move)
     {
-        throw new NotImplementedException();
+        Board newBoard = CurrentBoard.WithMove(move);
+        HalfTurnCount newHalfCounter = HalfTurnCounter.Increment();
+        FullTurnCount newFullCounter = NextToPlay == Colour.Black ? FullTurnCounter.Increment() : FullTurnCounter;
+        Colour nextToPlay = NextToPlay == Colour.Black ? Colour.White : Colour.Black;
+        CastlingRights newRights = GetUpdatedRights(CastlingRights, move);
+        Square? enPassantTarget = GetEnPassantTarget(move);
+
+        return new(newBoard, nextToPlay, newHalfCounter, newFullCounter, newRights, enPassantTarget);
+    }
+
+    private static Square? GetEnPassantTarget(Move move)
+    {
+        if (move.MoveType is not MoveType.PawnDouble)
+        {
+            return null;
+        }
+
+        return move.Destination;
+    }
+
+    private static CastlingRights GetUpdatedRights(CastlingRights castlingRights, Move move)
+    {
+        if (move.Source == Square.FromRankAndFile(File.E, Rank.One))
+        {
+            return castlingRights.WithoutWhiteCastling();
+        }
+
+        if (move.Source == Square.FromRankAndFile(File.E, Rank.Eight))
+        {
+            return castlingRights.WithoutBlackCastling();
+        }
+
+        if (move.Source == Square.FromRankAndFile(File.A, Rank.One))
+        {
+            return castlingRights.WithoutWhiteQueenside();
+        }
+
+        if (move.Source == Square.FromRankAndFile(File.A, Rank.Eight))
+        {
+            return castlingRights.WithoutBlackQueenside();
+        }
+
+        if (move.Source == Square.FromRankAndFile(File.H, Rank.One))
+        {
+            return castlingRights.WithoutWhiteKingside();
+        }
+
+        if (move.Source == Square.FromRankAndFile(File.H, Rank.Eight))
+        {
+            return castlingRights.WithoutBlackKingside();
+        }
+
+        return castlingRights;
     }
 }
