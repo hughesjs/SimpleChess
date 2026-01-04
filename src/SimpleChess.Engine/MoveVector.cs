@@ -8,4 +8,8 @@ public readonly struct MoveVector
     public required int Ranks { get; init; }
     public required int Files { get; init; }
 
+    public static MoveVector operator *(MoveVector vector, int multiplier)
+    {
+        return new(){Ranks = vector.Ranks * multiplier, Files = vector.Files * multiplier};
+    }
 }
