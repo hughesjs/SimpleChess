@@ -62,6 +62,14 @@ public class BasicMoveFinderTests
         return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, board, piece])!;
     }
 
+    private static IEnumerable<Move> InvokeGetKingBasicMoves(Square pieceSquare, Board board, Piece piece)
+    {
+        MethodInfo? method = typeof(BasicMoveFinder)
+            .GetMethod("GetKingBasicMoves", BindingFlags.NonPublic | BindingFlags.Static);
+
+        return (IEnumerable<Move>)method!.Invoke(null, [pieceSquare, board, piece])!;
+    }
+
     private static Board CreateBoardFromFen(string fenString)
     {
         bool success = FenGameState.TryParse(fenString, out FenGameState fenState);
@@ -691,6 +699,122 @@ public class BasicMoveFinderTests
         Piece blackKnight = new() { Colour = Colour.Black, PieceType = PieceType.Knight };
 
         IEnumerable<Move> moves = InvokeGetKnightBasicMoves(d4, board, blackKnight);
+
+        await Assert.That(moves.ToArray()).Count().IsEqualTo(8);
+    }
+
+    [Test]
+    public async Task KingOnEmptyBoardHasAllEightMoves()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/3K4/8/8/8 w - - 0 1");
+        Square d4 = Square.FromRankAndFile(File.D, Rank.Four);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d4, board, whiteKing);
+
+        await Assert.That(moves.ToArray()).Count().IsEqualTo(8);
+    }
+
+    [Test]
+    public async Task KingInCornerHasThreeMoves()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/8/K7 w - - 0 1");
+        Square a1 = Square.FromRankAndFile(File.A, Rank.One);
+        Square a2 = Square.FromRankAndFile(File.A, Rank.Two);
+        Square b1 = Square.FromRankAndFile(File.B, Rank.One);
+        Square b2 = Square.FromRankAndFile(File.B, Rank.Two);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(a1, board, whiteKing);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(3);
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(a2))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(b1))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(b2))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task KingOnEdgeHasFiveMoves()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/8/8/8/3K4 w - - 0 1");
+        Square d1 = Square.FromRankAndFile(File.D, Rank.One);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d1, board, whiteKing);
+
+        await Assert.That(moves.ToArray()).Count().IsEqualTo(5);
+    }
+
+    [Test]
+    public async Task KingBlockedByOwnPiecesInAllDirections()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/2PPP3/2PKP3/2PPP3/8 w - - 0 1");
+        Square d3 = Square.FromRankAndFile(File.D, Rank.Three);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d3, board, whiteKing);
+
+        await Assert.That(moves.ToArray()).IsEmpty();
+    }
+
+    [Test]
+    public async Task KingCapturesEnemyPiece()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/3p4/3K4/8/8 w - - 0 1");
+        Square d3 = Square.FromRankAndFile(File.D, Rank.Three);
+        Square d4 = Square.FromRankAndFile(File.D, Rank.Four);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d3, board, whiteKing);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(8);
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(d4))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task KingWithMixedPiecesAround()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/2pPp3/2pKP3/2ppp3/8 w - - 0 1");
+        Square d3 = Square.FromRankAndFile(File.D, Rank.Three);
+        Square c4 = Square.FromRankAndFile(File.C, Rank.Four);
+        Square c3 = Square.FromRankAndFile(File.C, Rank.Three);
+        Square c2 = Square.FromRankAndFile(File.C, Rank.Two);
+        Square d2 = Square.FromRankAndFile(File.D, Rank.Two);
+        Square e2 = Square.FromRankAndFile(File.E, Rank.Two);
+        Square e4 = Square.FromRankAndFile(File.E, Rank.Four);
+        Piece whiteKing = new() { Colour = Colour.White, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d3, board, whiteKing);
+
+        Move[] movesArray = moves.ToArray();
+        using (Assert.Multiple())
+        {
+            await Assert.That(movesArray).Count().IsEqualTo(6);
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(c4))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(c3))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(c2))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(d2))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(e2))).IsTrue();
+            await Assert.That(movesArray.Any(m => m.Destination.Equals(e4))).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task BlackKingMovementIsSameAsWhite()
+    {
+        Board board = CreateBoardFromFen("8/8/8/8/3k4/8/8/8 w - - 0 1");
+        Square d4 = Square.FromRankAndFile(File.D, Rank.Four);
+        Piece blackKing = new() { Colour = Colour.Black, PieceType = PieceType.King };
+
+        IEnumerable<Move> moves = InvokeGetKingBasicMoves(d4, board, blackKing);
 
         await Assert.That(moves.ToArray()).Count().IsEqualTo(8);
     }

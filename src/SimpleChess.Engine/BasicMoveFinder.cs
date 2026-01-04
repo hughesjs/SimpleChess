@@ -13,7 +13,7 @@ public class BasicMoveFinder: IMoveFinder
     private static readonly MoveVector[] PawnAttacks = [new(){Ranks = 1, Files = 1}, new(){Ranks = 1, Files = -1}];
     private static readonly MoveVector[] RookUnitVectors = [new(){Ranks = 1, Files = 0}, new() {Ranks = 0, Files = 1}, new()  {Ranks = -1, Files = 0}, new()  {Ranks = 0, Files = -1}];
     private static readonly MoveVector[] BishopUnitVectors = [new(){Ranks = 1, Files = 1}, new() {Ranks = 1, Files = -1}, new()  {Ranks = -1, Files = -1}, new()  {Ranks = -1, Files = 1}];
-    private static readonly MoveVector[] QueenUnitVectors = BishopUnitVectors.Concat(RookUnitVectors).ToArray();
+    private static readonly MoveVector[] RoyalMoveVectors = BishopUnitVectors.Concat(RookUnitVectors).ToArray();
     private static readonly MoveVector[] KnightMoveVectors = [new(){Ranks = 2, Files = 1}, new(){Ranks = 2, Files = -1}, new(){Ranks = -2, Files = 1}, new(){Ranks = -2, Files = -1}, new(){Ranks = 1, Files = 2}, new(){Ranks = 1, Files = -2}, new(){Ranks = -1, Files = 2}, new(){Ranks = -1, Files = -2}];
 
     [Pure]
@@ -76,7 +76,20 @@ public class BasicMoveFinder: IMoveFinder
     [Pure]
     private static IEnumerable<Move> GetKingBasicMoves(Square pieceSquare, Board board, Piece piece)
     {
-        throw new NotImplementedException();
+        foreach (MoveVector moveVector in RoyalMoveVectors)
+        {
+            if (!pieceSquare.TryApplyMoveVector(piece.Colour, moveVector, out Square? targetSquare))
+            {
+                continue;
+            }
+
+            Piece pieceAtDestination = board.GetPieceAt(targetSquare.Value);
+
+            if (pieceAtDestination == Piece.None || pieceAtDestination.Colour != piece.Colour)
+            {
+                yield return new Move { Source = pieceSquare, Destination = targetSquare.Value };
+            }
+        }
     }
 
     [Pure]
@@ -99,7 +112,7 @@ public class BasicMoveFinder: IMoveFinder
     }
 
     [Pure]
-    private static IEnumerable<Move> GetQueenBasicMoves(Square pieceSquare, Board board, Piece piece) => QueenUnitVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
+    private static IEnumerable<Move> GetQueenBasicMoves(Square pieceSquare, Board board, Piece piece) => RoyalMoveVectors.SelectMany(unitVector => ProjectAlongDirection(pieceSquare, board, piece.Colour, unitVector));
 
 
     [Pure]
